@@ -1,0 +1,23 @@
+{
+  "name": "MITV SUPREME NETWORK",
+  "short_name": "MITV",
+  "description": "Premium Multi-Source IPTV Intelligence Network by Muaaz Iqbal",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#010101",
+  "theme_color": "#ffcc33",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://i.ibb.co/39sZdcSw/Untitled-design-20260218-232855-0000-removebg-preview.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://i.ibb.co/39sZdcSw/Untitled-design-20260218-232855-0000-removebg-preview.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

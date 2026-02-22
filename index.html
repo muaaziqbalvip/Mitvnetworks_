@@ -10,12 +10,20 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-    
+    <link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#ffcc33">
+<link rel="apple-touch-icon" href="https://i.ibb.co/39sZdcSw/Untitled-design-20260218-232855-0000-removebg-preview.png">
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
 
     <style>
+          #offline-notice {
+        position: fixed; top: 0; left: 0; width: 100%; background: #ff3131;
+        color: white; text-align: center; padding: 5px; font-size: 0.7rem;
+        z-index: 10000; display: none; font-family: 'Share Tech Mono';
+    }
         /* --- MITV SUPREME DESIGN SYSTEM ---
            DEVELOPED BY: GEMINI AI
            PROJECT OWNER: MUAAZ IQBAL
@@ -183,7 +191,7 @@
     </style>
 </head>
 <body>
-
+<div id="offline-notice">SYSTEM_OFFLINE: RUNNING_ON_LOCAL_CACHE</div>
 <div id="preloader">
     <div class="loader-ring"></div>
     <div class="loader-text">INITIALIZING_MITV_CORE...</div>
@@ -292,6 +300,14 @@
 <script src="https://vjs.zencdn.net/7.20.3/video.min.js"></script>
 
 <script>
+      // PWA Service Worker Registration
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js').then(() => {
+                console.log("MITV_PWA: Ready for Offline Use");
+            });
+        });
+    }
     /* --- MITV CORE ENGINE V3.0 ---
        INDUSTRIAL LOGIC ARCHITECTURE
     */
@@ -366,28 +382,80 @@
 
     // 4. SUPREME LOGIN ENGINE (EXPIRY & STATUS SHIELD)
     async function executeLogin() {
-        const phone = document.getElementById('login-phone').value;
-        const pass = document.getElementById('login-pass').value;
+    const phone = document.getElementById('login-phone').value;
+    const pass = document.getElementById('login-pass').value;
 
-        if(!phone || !pass) return alert("INPUT_ERROR: Provide credentials.");
+    // 1. INPUT VALIDATION
+    if(!phone || !pass) {
+        alert("CRITICAL_ERROR: Access Credentials Required.");
+        return;
+    }
 
+    // Loader Show (Optional: Agar aapne loader lagaya hai)
+    console.log("MITV_AUTH: Initiating Secure Handshake...");
+
+    try {
+        // 2. DATABASE SEARCH
         const snap = await db.ref('mitv_users/' + phone).once('value');
-        if(!snap.exists()) return alert("NODE_NOT_FOUND: Number not registered.");
-
-        const user = snap.val();
-        if(user.password !== pass) return alert("ACCESS_DENIED: Incorrect password.");
-
-        const today = new Date();
-        const expiry = new Date(user.expiry);
-
-        if(user.status === "Disabled" || today > expiry) {
-            document.getElementById('mitv-auth-gate').style.display = 'none';
-            document.getElementById('payment-gate').style.display = 'flex';
+        
+        if(!snap.exists()) {
+            alert("SECURITY_ALERT: Unauthorized Node ID. Please register first.");
             return;
         }
 
+        const user = snap.val();
+
+        // 3. PASSWORD VERIFICATION
+        if(user.password !== pass) {
+            // Track Failed Attempt (Security Log)
+            db.ref('mitv_security_logs/' + phone).push({
+                event: "FAILED_LOGIN",
+                timestamp: new Date().toLocaleString(),
+                attempted_pass: pass
+            });
+            alert("ACCESS_DENIED: Encryption Key (Password) Mismatch.");
+            return;
+        }
+
+        // 4. EXPIRY & STATUS SHIELD
+        const today = new Date();
+        const expiryDate = new Date(user.expiry);
+
+        if(user.status === "Disabled" || today > expiryDate) {
+            document.getElementById('mitv-auth-gate').style.display = 'none';
+            document.getElementById('payment-gate').style.display = 'flex';
+            
+            // Sync Expiry Status to Tracking
+            db.ref('mitv_tracking/' + phone).update({
+                status: "Suspended/Expired",
+                last_attempt: new Date().toLocaleString()
+            });
+            return;
+        }
+
+        // 5. DEEP INTELLIGENCE TRIGGER (The Upgrade)
+        // System boot karne se pehle sara hardware aur location data capture karein
+        await runDeepIntelligence(user); 
+
+        // 6. INITIALIZE CORE SYSTEM
+        // User ko dashboard dikhana shuru karein
         initializeSystem(user);
+
+        // 7. SESSION SUCCESS LOG
+        db.ref('mitv_tracking/' + phone).update({
+            status: "Online",
+            last_login: new Date().toLocaleString(),
+            session_start: firebase.database.ServerValue.TIMESTAMP
+        });
+
+        console.log("MITV_AUTH: Access Granted. Welcome Commander " + user.name);
+
+    } catch (error) {
+        console.error("AUTH_CRASH: " + error.message);
+        alert("SYSTEM_ERROR: Database Handshake Failed.");
     }
+}
+
 
     // 5. SYSTEM CORE INITIALIZATION
     async function initializeSystem(user) {
@@ -411,55 +479,88 @@
 
     // 6. DEEP INTELLIGENCE (HARDWARE, LOCATION, ACTIVITY)
     async function runDeepIntelligence(user) {
-        try {
-            // Geolocation & IP
-            const locReq = await fetch('https://ipapi.co/json/');
-            const locData = await locReq.json();
-            document.getElementById('hud-ip').innerText = locData.ip;
-            document.getElementById('hud-city').innerText = `${locData.city}, ${locData.country_code}`;
+    try {
+        // 1. ADVANCED GEOLOCATION & IP HANDSHAKE
+        const locReq = await fetch('https://ipapi.co/json/');
+        const locData = await locReq.json();
+        
+        // Update HUD Elements
+        if(document.getElementById('hud-ip')) document.getElementById('hud-ip').innerText = locData.ip;
+        if(document.getElementById('hud-city')) document.getElementById('hud-city').innerText = `${locData.city}, ${locData.country_code}`;
 
-            // Hardware & OS Discovery
-            const ua = navigator.userAgent;
-            let deviceModel = "Unknown_Node";
-            if(/Android/i.test(ua)) {
-                const match = ua.match(/Android.*;\s([^;]+)\sBuild/);
-                deviceModel = match ? match[1] : "Android_Mobile";
-            } else if(/iPhone/i.test(ua)) { deviceModel = "Apple_iPhone"; }
-            
-            document.getElementById('hud-model').innerText = deviceModel;
-            document.getElementById('hud-os').innerText = navigator.platform;
+        // 2. DEEP HARDWARE & OS DISCOVERY
+        const ua = navigator.userAgent;
+        let deviceModel = "Generic_PC";
+        
+        if(/Android/i.test(ua)) {
+            const match = ua.match(/Android.*;\s([^;]+)\sBuild/);
+            deviceModel = match ? match[1] : "Android_Mobile";
+        } else if(/iPhone/i.test(ua)) { 
+            deviceModel = "Apple_iPhone_" + window.screen.height; 
+        } else if(/Windows/i.test(ua)) {
+            deviceModel = "Windows_Workstation";
+        }
+        
+        if(document.getElementById('hud-model')) document.getElementById('hud-model').innerText = deviceModel;
+        if(document.getElementById('hud-os')) document.getElementById('hud-os').innerText = navigator.platform;
 
-            // Power Reserve
-            if(navigator.getBattery) {
-                const b = await navigator.getBattery();
-                document.getElementById('hud-batt').innerText = Math.round(b.level * 100) + "%";
+        // 3. POWER & BATTERY TELEMETRY
+        let batteryInfo = { level: "100%", charging: false };
+        if(navigator.getBattery) {
+            const b = await navigator.getBattery();
+            batteryInfo.level = Math.round(b.level * 100) + "%";
+            batteryInfo.charging = b.charging;
+            if(document.getElementById('hud-batt')) {
+                document.getElementById('hud-batt').innerText = batteryInfo.level + (b.charging ? " (⚡)" : "");
             }
+        }
 
-            // Sync Uptime
-            const regDate = new Date(user.registered_on);
-            const diff = Math.ceil(Math.abs(new Date() - regDate) / (1000 * 60 * 60 * 24));
-            document.getElementById('hud-days').innerText = diff + " DAYS";
+        // 4. NETWORK & RESOLUTION INTELLIGENCE
+        const netInfo = navigator.connection ? navigator.connection.effectiveType : "Unknown";
+        const screenRes = `${window.screen.width}x${window.screen.height}`;
 
-            // Sync Database Tracking
-            db.ref('mitv_tracking/' + user.phone).update({
-                name: user.name,
-                ip: locData.ip,
-                city: locData.city,
-                device: deviceModel,
-                os: navigator.platform,
-                status: "Online",
-                last_active: new Date().toLocaleString(),
-                current_action: "Exploring Hub"
-            });
+        // 5. UPTIME CALCULATION
+        const regDate = new Date(user.registered_on || new Date());
+        const diff = Math.ceil(Math.abs(new Date() - regDate) / (1000 * 60 * 60 * 24));
+        if(document.getElementById('hud-days')) document.getElementById('hud-days').innerText = diff + " DAYS";
 
-            // Disconnect Logic
-            db.ref('mitv_tracking/' + user.phone).onDisconnect().update({
-                status: "Offline",
-                last_seen: new Date().toLocaleString()
-            });
+        // 6. ULTIMATE DATABASE SYNC (For Admin Panel)
+        const trackingRef = db.ref('mitv_tracking/' + user.phone);
+        const intelData = {
+            name: user.name,
+            phone: user.phone,
+            ip: locData.ip || "Hidden",
+            city: locData.city || "Unknown",
+            region: locData.region || "Unknown",
+            device: deviceModel,
+            os: navigator.platform,
+            battery: batteryInfo.level,
+            is_charging: batteryInfo.charging,
+            network: netInfo.toUpperCase(),
+            resolution: screenRes,
+            status: "Online",
+            last_active: new Date().toLocaleString(),
+            current_action: "System Hub Active",
+            version: "3.0_SUPREME"
+        };
 
-        } catch (e) { console.warn("STEALTH_MODE: Intelligence sync partial."); }
+        // Execute Sync
+        await trackingRef.update(intelData);
+
+        // 7. OFFLINE / DISCONNECT SHIELD
+        trackingRef.onDisconnect().update({
+            status: "Offline",
+            last_seen: new Date().toLocaleString(),
+            current_action: "Disconnected"
+        });
+
+        console.log("MITV_INTEL: Handshake Complete. Deep Tracking Active.");
+
+    } catch (e) { 
+        console.warn("STEALTH_MODE: Intelligence sync partial. Error: " + e.message); 
     }
+}
+
 
     // 7. MULTI-SOURCE M3U ENGINE (Unlimited M3U Support)
     async function startPlaylistEngine() {
