@@ -131,6 +131,102 @@
         }
         .on { background: rgba(57, 255, 20, 0.1); color: var(--success); border: 1px solid var(--success); }
         .off { background: rgba(255, 49, 49, 0.1); color: var(--error); border: 1px solid var(--error); }
+/* --- AD MANAGER CARD STYLING --- */
+.admin-card {
+    background: var(--surface);
+    border: 1px solid rgba(255, 204, 51, 0.2);
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 25px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    animation: fadeIn 0.8s ease;
+}
+
+.admin-card h3 {
+    font-family: 'Orbitron', sans-serif;
+    color: var(--gold);
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid #1a1a1a;
+    padding-bottom: 10px;
+}
+
+/* Input Fields Styling */
+.input-group input, 
+.input-group textarea {
+    width: 100%;
+    background: #050505 !important;
+    border: 1px solid #222 !important;
+    border-radius: 8px;
+    color: #fff;
+    padding: 12px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+    transition: 0.3s;
+}
+
+.input-group input:focus, 
+.input-group textarea:focus {
+    border-color: var(--gold) !important;
+    box-shadow: 0 0 10px var(--gold-glow);
+    outline: none;
+}
+
+/* Buttons Styling */
+.action-btn {
+    background: linear-gradient(45deg, #000, #1a1a1a);
+    color: var(--gold);
+    border: 2px solid var(--gold);
+    padding: 12px;
+    border-radius: 8px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: 0.3s;
+    text-transform: uppercase;
+}
+
+.action-btn:hover {
+    background: var(--gold);
+    color: #000;
+    box-shadow: 0 0 20px var(--gold);
+    transform: translateY(-2px);
+}
+
+/* Remove Ad Button (Special Red Style) */
+.action-btn[onclick="clearAd()"] {
+    background: rgba(255, 49, 49, 0.1);
+    border-color: #ff3131;
+    color: #ff3131;
+}
+
+.action-btn[onclick="clearAd()"]:hover {
+    background: #ff3131;
+    color: #fff;
+    box-shadow: 0 0 20px rgba(255, 49, 49, 0.5);
+}
+
+/* Placeholder Color */
+::placeholder {
+    color: #444;
+    font-size: 0.8rem;
+}
+
+/* Textarea height fix */
+#ad-desc {
+    height: 80px;
+    resize: none;
+}
 
     </style>
 </head>
@@ -173,6 +269,20 @@
         <p style="font-size:0.55rem; color:#444; margin-bottom:5px; font-family:var(--font-data);">ACTIVE_AUTHORIZED_CODE</p>
         <h2 id="current-auth-display" style="font-family:var(--font-data); color:var(--gold); letter-spacing:3px; text-shadow: 0 0 10px var(--gold-glow);">----</h2>
     </div>
+<div class="admin-card">
+    <h3><i class="fas fa-ad"></i> GLOBAL ADVERTISEMENT MANAGER</h3>
+    <div class="input-group">
+        <input type="text" id="ad-title" placeholder="Add Title (e.g. MEGA OFFER)">
+        <input type="text" id="ad-img" placeholder="Image URL (Direct Link)">
+        <textarea id="ad-desc" placeholder="Short Description..." style="width:100%; background:#111; border:1px solid #333; color:#fff; padding:10px; border-radius:8px; margin-top:5px;"></textarea>
+        <button class="action-btn" onclick="pushGlobalAd()" style="width:100%; margin-top:10px;">
+            <i class="fas fa-broadcast-tower"></i> TRIGGER AD ON ALL DEVICES
+        </button>
+        <button class="action-btn" onclick="clearAd()" style="width:100%; background:#ff3131; border-color:#ff3131; margin-top:5px;">
+            <i class="fas fa-trash"></i> REMOVE AD
+        </button>
+    </div>
+</div>
 
     <div class="input-group">
         <input type="text" id="update-key-input" placeholder="ENTER NEW CODE">
@@ -404,6 +514,27 @@ function bootAdminCore() {
     loadUsers();
     loadM3UHistory();
     syncAuthCodeStatus(); // Ye line lazmi add karein
+}
+function pushGlobalAd() {
+    const title = document.getElementById('ad-title').value;
+    const img = document.getElementById('ad-img').value;
+    const desc = document.getElementById('ad-desc').value;
+
+    if(!title || !img) return alert("Title and Image are required!");
+
+    db.ref('global_announcement').set({
+        title: title,
+        img: img,
+        desc: desc,
+        timestamp: Date.now(),
+        active: true
+    });
+    alert("Ad Triggered Successfully!");
+}
+
+function clearAd() {
+    db.ref('global_announcement').update({ active: false });
+    alert("Ad Removed!");
 }
 
 </script>

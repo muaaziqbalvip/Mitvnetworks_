@@ -403,6 +403,183 @@ header { height: 70px; display: flex; justify-content: space-between; align-item
     text-shadow: 0 0 10px rgba(255, 49, 49, 0.5);
     transform: scale(1.2);
 }
+/* --- AD MANAGER CARD STYLING --- */
+.admin-card {
+    background: var(--surface);
+    border: 1px solid rgba(255, 204, 51, 0.2);
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 25px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    animation: fadeIn 0.8s ease;
+}
+
+.admin-card h3 {
+    font-family: 'Orbitron', sans-serif;
+    color: var(--gold);
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid #1a1a1a;
+    padding-bottom: 10px;
+}
+
+/* Input Fields Styling */
+.input-group input, 
+.input-group textarea {
+    width: 100%;
+    background: #050505 !important;
+    border: 1px solid #222 !important;
+    border-radius: 8px;
+    color: #fff;
+    padding: 12px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+    transition: 0.3s;
+}
+
+.input-group input:focus, 
+.input-group textarea:focus {
+    border-color: var(--gold) !important;
+    box-shadow: 0 0 10px var(--gold-glow);
+    outline: none;
+}
+
+/* Buttons Styling */
+.action-btn {
+    background: linear-gradient(45deg, #000, #1a1a1a);
+    color: var(--gold);
+    border: 2px solid var(--gold);
+    padding: 12px;
+    border-radius: 8px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: 0.3s;
+    text-transform: uppercase;
+}
+
+.action-btn:hover {
+    background: var(--gold);
+    color: #000;
+    box-shadow: 0 0 20px var(--gold);
+    transform: translateY(-2px);
+}
+
+/* Remove Ad Button (Special Red Style) */
+.action-btn[onclick="clearAd()"] {
+    background: rgba(255, 49, 49, 0.1);
+    border-color: #ff3131;
+    color: #ff3131;
+}
+
+.action-btn[onclick="clearAd()"]:hover {
+    background: #ff3131;
+    color: #fff;
+    box-shadow: 0 0 20px rgba(255, 49, 49, 0.5);
+}
+
+/* Placeholder Color */
+::placeholder {
+    color: #444;
+    font-size: 0.8rem;
+}
+
+/* Textarea height fix */
+#ad-desc {
+    height: 80px;
+    resize: none;
+}
+/* --- GLOBAL AD OVERLAY SYSTEM --- */
+#mi-global-ad-overlay {
+    backdrop-filter: blur(10px); /* Background dhundla karne ke liye */
+    animation: fadeIn 0.5s ease;
+}
+
+.ad-card-container {
+    background: #0a0a0a;
+    border: 2px solid var(--gold);
+    border-radius: 20px;
+    width: 100%;
+    max-width: 400px;
+    padding: 25px;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 0 50px rgba(255, 204, 51, 0.2);
+    animation: zoomIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+#ad-ui-title {
+    color: var(--gold);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 900;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+#ad-ui-img {
+    width: 100%;
+    max-height: 250px;
+    object-fit: cover;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    border: 1px solid rgba(255, 204, 51, 0.3);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+}
+
+#ad-ui-desc {
+    color: #bbb;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    margin-bottom: 25px;
+}
+
+/* Close Button Styling */
+#ad-close-btn {
+    width: 100%;
+    background: var(--gold);
+    color: #000;
+    border: none;
+    padding: 14px;
+    border-radius: 12px;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: 0.3s;
+    box-shadow: 0 0 20px var(--gold-glow);
+}
+
+#ad-close-btn:hover {
+    transform: scale(1.02);
+    box-shadow: 0 0 30px var(--gold);
+}
+
+#ad-timer-text {
+    color: #666;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    margin-top: 10px;
+    letter-spacing: 1px;
+}
+
+/* Animations */
+@keyframes zoomIn {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
+}
 
     </style>
 </head>
@@ -533,6 +710,21 @@ header { height: 70px; display: flex; justify-content: space-between; align-item
         DEVELOPED BY <b>MUAAZ IQBAL</b> | MITV NETWORK ©&® 2026
     </div>
 </footer>
+<div id="mi-global-ad-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:9999; align-items:center; justify-content:center; padding:20px;">
+    <div class="ad-card-container">
+        <div style="width:50px; height:2px; background:var(--gold); margin:0 auto 15px;"></div>
+        
+        <h2 id="ad-ui-title">MEGA OFFER</h2>
+        <img id="ad-ui-img" src="placeholder.jpg">
+        <p id="ad-ui-desc">Loading special announcement...</p>
+        
+        <button id="ad-close-btn" onclick="closeAdOverlay()">
+            <i class="fas fa-arrow-right"></i> CONTINUE TO MITV
+        </button>
+        <p id="ad-timer-text">SYSTEM SECURING: 5s</p>
+    </div>
+</div>
+
 
 <script src="https://vjs.zencdn.net/7.20.3/video.min.js"></script>
 
@@ -1069,6 +1261,46 @@ async function handleLike() {
 
 // Is function ko initializeSystem ke andar call karein
 // syncLikes();
+function listenForAds() {
+    db.ref('global_announcement').on('value', snap => {
+        const data = snap.val();
+        if(data && data.active) {
+            // Data Set Karein
+            document.getElementById('ad-ui-title').innerText = data.title;
+            document.getElementById('ad-ui-img').src = data.img;
+            document.getElementById('ad-ui-desc').innerText = data.desc;
+            
+            // Show Overlay
+            const overlay = document.getElementById('mi-global-ad-overlay');
+            overlay.style.display = 'flex';
+            
+            // 5 Seconds Timer
+            let timeLeft = 5;
+            const timerText = document.getElementById('ad-timer-text');
+            const closeBtn = document.getElementById('ad-close-btn');
+            
+            closeBtn.style.display = 'none';
+            timerText.style.display = 'block';
+
+            const timer = setInterval(() => {
+                timeLeft--;
+                timerText.innerText = `CLOSE BUTTON IN ${timeLeft}s...`;
+                if(timeLeft <= 0) {
+                    clearInterval(timer);
+                    timerText.style.display = 'none';
+                    closeBtn.style.display = 'block';
+                }
+            }, 1000);
+        }
+    });
+}
+
+function closeAdOverlay() {
+    document.getElementById('mi-global-ad-overlay').style.display = 'none';
+}
+
+// System Start hone par call karein
+// listenForAds();
 
 </script>
 </body>
