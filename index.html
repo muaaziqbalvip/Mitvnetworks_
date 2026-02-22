@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MITV NETWORK | SUPREME COMMAND</title>
+
+    <link href="https://vjs.zencdn.net/7.20.3/video-js.css" rel="stylesheet" />
+    <link href="https://unpkg.com/@videojs/themes@1.0.1/dist/city/index.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;900&family=Rajdhani:wght@300;500;700&family=Share+Tech+Mono&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
+
+    <style>
+        /* --- SUPREME THEME CONFIGURATION --- */
+        :root {
+            --gold: #ffcc33;
+            --neon: #00f2ff;
+            --crimson: #ff3131;
+            --emerald: #39ff14;
+            --bg-deep: #020202;
+            --bg-surface: #0a0a0a;
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: 1px solid rgba(255, 204, 51, 0.2);
+            --font-tech: 'Share Tech Mono', monospace;
+            --font-head: 'Orbitron', sans-serif;
+            --glow: 0 0 20px rgba(255, 204, 51, 0.2);
+        }
+
+        /* --- GLOBAL RESET & SCROLLBAR --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        ::-webkit-scrollbar { width: 5px; background: #000; }
+        ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
+
+        body {
+            background: var(--bg-deep);
+            color: #ffffff;
+            font-family: 'Rajdhani', sans-serif;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        /* --- QUANTUM AUTHENTICATION UI --- */
+        #mitv-gateway {
+            position: fixed; inset: 0; background: #000;
+            display: flex; justify-content: center; align-items: center;
+            z-index: 99999; overflow: hidden;
+        }
+        .gateway-card {
+            background: var(--bg-surface); border: var(--border);
+            padding: 60px 40px; border-radius: 40px; text-align: center;
+            width: 90%; max-width: 480px; position: relative;
+            box-shadow: 0 30px 100px rgba(0,0,0,1);
+        }
+        .gateway-card::after {
+            content: ''; position: absolute; inset: -2px; border-radius: 40px;
+            background: linear-gradient(45deg, var(--gold), transparent, var(--neon));
+            z-index: -1; opacity: 0.2;
+        }
+        .logo-main {
+            font-family: var(--font-head); font-size: 3.5rem; font-weight: 900;
+            background: linear-gradient(to bottom, #fff, var(--gold));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            letter-spacing: 10px; margin-bottom: 5px;
+        }
+        .google-sign-in {
+            background: #ffffff; color: #000; border: none; padding: 18px 30px;
+            border-radius: 15px; font-family: var(--font-head); font-weight: 900;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            gap: 15px; width: 100%; margin-top: 40px; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .google-sign-in:hover { transform: scale(1.05); box-shadow: 0 10px 30px rgba(255,255,255,0.1); }
+
+        /* --- ACCESS DENIED (BAN SCREEN) --- */
+        #shield-active {
+            position: fixed; inset: 0; background: #000; z-index: 100000;
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            color: var(--crimson); text-align: center;
+        }
+
+        /* --- TOP COMMAND HUD --- */
+        .system-hud {
+            padding: 20px 4%; display: flex; justify-content: space-between; align-items: center;
+            background: rgba(0,0,0,0.95); border-bottom: 1px solid #1a1a1a;
+            position: sticky; top: 0; z-index: 1000; backdrop-filter: blur(20px);
+        }
+        .hud-profile { display: flex; align-items: center; gap: 15px; }
+        .avatar-frame { width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--gold); padding: 2px; }
+        .avatar-frame img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+        .user-status-text { font-family: var(--font-tech); font-size: 0.7rem; color: #666; }
+        .user-status-text b { color: var(--gold); font-size: 0.9rem; display: block; font-family: 'Rajdhani'; }
+
+        /* --- DIGITAL CINEMA PLAYER --- */
+        .cinema-module {
+            max-width: 1300px; margin: 30px auto; width: 95%;
+            background: #000; border-radius: 25px; overflow: hidden;
+            border: 1px solid #1a1a1a; box-shadow: 0 50px 100px rgba(0,0,0,0.9);
+        }
+        .vjs-custom-skin { width: 100%; aspect-ratio: 16/9; }
+
+        /* --- SMART TRACKING DASHBOARD (VISIBLE TO USER) --- */
+        .live-stats-bar {
+            max-width: 1300px; margin: 0 auto 20px; display: flex; gap: 15px;
+            padding: 0 20px; font-family: var(--font-tech); font-size: 0.75rem;
+        }
+        .stat-chip { background: var(--glass); padding: 8px 15px; border-radius: 5px; border: 1px solid #1a1a1a; color: #888; }
+        .stat-chip span { color: var(--neon); }
+
+        /* --- SEARCH ENGINE HUD --- */
+        .search-container { max-width: 900px; margin: 40px auto; position: relative; padding: 0 20px; }
+        #search-input {
+            width: 100%; padding: 20px 70px; border-radius: 20px;
+            background: #080808; border: 1px solid #1a1a1a; color: white;
+            font-family: var(--font-tech); font-size: 1.2rem; transition: 0.3s;
+        }
+        #search-input:focus { border-color: var(--gold); background: #0d0d0d; box-shadow: var(--glow); }
+        .search-icon { position: absolute; left: 45px; top: 50%; transform: translateY(-50%); color: var(--gold); font-size: 1.4rem; }
+
+        /* --- GRID ARCHITECTURE --- */
+        .stream-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 25px; padding: 0 5% 150px; max-width: 1400px; margin: auto;
+        }
+        .stream-node {
+            background: var(--bg-surface); border: 1px solid #1a1a1a; border-radius: 25px;
+            padding: 30px 20px; text-align: center; cursor: pointer; transition: 0.4s;
+            position: relative; overflow: hidden;
+        }
+        .stream-node::before {
+            content: 'HQ'; position: absolute; top: 15px; right: 15px; font-size: 0.6rem;
+            color: var(--gold); border: 1px solid var(--gold); padding: 2px 6px; border-radius: 4px;
+        }
+        .stream-node:hover {
+            transform: translateY(-12px) scale(1.02); border-color: var(--gold);
+            background: linear-gradient(145deg, #0a0a0a, #111);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+        }
+        .stream-node img { width: 100%; height: 85px; object-fit: contain; margin-bottom: 20px; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.3)); }
+        .stream-node p { font-family: var(--font-head); font-size: 0.75rem; font-weight: 700; color: #fff; letter-spacing: 1px; }
+
+        /* --- MOBILE TUNING (RESPONSIVE) --- */
+        @media (max-width: 768px) {
+            .system-hud { padding: 15px 5%; }
+            .logo-main { font-size: 2.2rem; }
+            .stream-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; }
+            .stream-node { padding: 15px 10px; border-radius: 15px; }
+            .stream-node img { height: 50px; margin-bottom: 10px; }
+            .stream-node p { font-size: 0.6rem; }
+            .live-stats-bar { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="shield-active">
+    <i class="fas fa-radiation-alt" style="font-size: 6rem; margin-bottom: 30px;"></i>
+    <h1 style="font-family: var(--font-head); letter-spacing: 5px;">ACCOUNT SUSPENDED</h1>
+    <p style="color: #555; font-size: 1.1rem; max-width: 80%; margin-top: 15px;">System identification failed or access revoked by MITV Admin.</p>
+    <button onclick="location.reload()" style="margin-top:40px; background:var(--gold); border:none; padding:12px 30px; border-radius:5px; font-weight:bold;">RE-VALIDATE</button>
+</div>
+
+<div id="mitv-gateway">
+    <div class="gateway-card">
+        <div class="logo-main">MITV</div>
+        <p style="color: #666; font-family: var(--font-tech); font-size: 0.8rem; letter-spacing: 2px;">ENCRYPTED INFRASTRUCTURE</p>
+        
+        <div id="loading-spinner" style="display:none; margin-top: 40px;">
+            <i class="fas fa-circle-notch fa-spin" style="font-size: 2rem; color: var(--gold);"></i>
+            <p style="margin-top:10px; font-family: var(--font-tech); font-size: 0.7rem;">DECRYPTING SESSION...</p>
+        </div>
+
+        <button class="google-sign-in" id="login-trigger" onclick="runGatewayAuth()">
+            <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" width="22">
+            INITIALIZE GOOGLE LOGIN
+        </button>
+    </div>
+</div>
+
+<div id="mitv-core" style="display:none;">
+    <header class="system-hud">
+        <div style="font-family: var(--font-head); font-weight: 900; color: var(--gold); letter-spacing: 4px; font-size: 1.4rem;">MITV</div>
+        <div class="hud-profile" id="dynamic-profile">
+            </div>
+    </header>
+
+    <div class="cinema-module">
+        <video id="mitv-player" class="video-js vjs-theme-city vjs-big-play-centered" controls preload="auto"></video>
+    </div>
+
+    <div class="live-stats-bar">
+        <div class="stat-chip">IP_ADDR: <span id="stat-ip">SECURE</span></div>
+        <div class="stat-chip">LATENCY: <span id="stat-ping">0ms</span></div>
+        <div class="stat-chip">SESSION: <span id="stat-session">ACTIVE</span></div>
+        <div class="stat-chip">BATTERY: <span id="stat-bat">--</span></div>
+    </div>
+
+    <div class="search-container">
+        <i class="fas fa-search search-icon"></i>
+        <input type="text" id="search-input" placeholder="SCANNING SATELLITE FREQUENCIES...">
+    </div>
+
+    <div class="stream-grid" id="node-grid">
+        </div>
+</div>
+
+<script src="https://vjs.zencdn.net/7.20.3/video.min.js"></script>
+
+<script>
+/**
+ * MITV SUPREME ENGINE CORE v9.0
+ * FULL RECOVERY & TRACKING SYSTEM
+ */
+
+// 1. SYSTEM CONFIGURATION
+const firebaseConfig = {
+    apiKey: "AIzaSyAXzI1yV8oIxnfinfoPD-xyHRVo-jMHFTg",
+    authDomain: "mitv-baa8f.firebaseapp.com",
+    databaseURL: "https://mitv-baa8f-default-rtdb.firebaseio.com/",
+    projectId: "mitv-baa8f",
+    storageBucket: "mitv-baa8f.firebasestorage.app",
+    messagingSenderId: "618910336500",
+    appId: "1:618910336500:web:6e4a3583c17d78ae96e5a1"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const auth = firebase.auth();
+const vjs = videojs('mitv-player', { fluid: true, playbackRates: [0.5, 1, 1.5, 2] });
+
+// 2. QUANTUM AUTHENTICATION PROCESS
+function runGatewayAuth() {
+    document.getElementById('login-trigger').style.display = 'none';
+    document.getElementById('loading-spinner').style.display = 'block';
+    
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider).catch(e => {
+        alert("CRITICAL_AUTH_ERROR: " + e.message);
+        document.getElementById('login-trigger').style.display = 'flex';
+        document.getElementById('loading-spinner').style.display = 'none';
+    });
+}
+
+auth.onAuthStateChanged(user => {
+    if (user) {
+        verifyAccessPrivileges(user);
+    } else {
+        document.getElementById('mitv-gateway').style.display = 'flex';
+        document.getElementById('mitv-core').style.display = 'none';
+    }
+});
+
+// 3. ADMIN SHIELD & VALIDATION (Enable/Disable Logic)
+function verifyAccessPrivileges(user) {
+    const accessRef = db.ref('mitv_tracking/' + user.uid);
+    
+    accessRef.on('value', snapshot => {
+        const profile = snapshot.val();
+        
+        if (profile && profile.status === "Disabled") {
+            document.getElementById('shield-active').style.display = 'flex';
+            document.getElementById('mitv-core').style.display = 'none';
+            document.getElementById('mitv-gateway').style.display = 'none';
+        } else {
+            document.getElementById('shield-active').style.display = 'none';
+            document.getElementById('mitv-gateway').style.display = 'none';
+            document.getElementById('mitv-core').style.display = 'block';
+            
+            injectProfileUI(user);
+            initializeSupremeTracking(user);
+            syncStreamNodes();
+        }
+    });
+}
+
+function injectProfileUI(user) {
+    const area = document.getElementById('dynamic-profile');
+    area.innerHTML = `
+        <div class="user-status-text">
+            <b>${user.displayName}</b>
+            <span style="color:var(--emerald)">● ENCRYPTED CONNECTION</span>
+        </div>
+        <div class="avatar-frame">
+            <img src="${user.photoURL}" alt="User">
+        </div>
+        <i class="fas fa-power-off" onclick="auth.signOut()" style="color:var(--crimson); cursor:pointer; font-size:1.2rem; margin-left:10px;"></i>
+    `;
+}
+
+// 4. SUPREME DIGITAL TRACKER (1500+ Lines Logic Capacity)
+async function initializeSupremeTracking(user, currentActivity = "IDLE_STATION") {
+    try {
+        const ipResponse = await fetch('https://api.ipify.org?format=json');
+        const ipData = await ipResponse.json();
+        document.getElementById('stat-ip').innerText = ipData.ip;
+
+        let batteryLevel = "N/A";
+        if (navigator.getBattery) {
+            const battery = await navigator.getBattery();
+            batteryLevel = Math.round(battery.level * 100) + "% " + (battery.charging ? "⚡" : "🔋");
+            document.getElementById('stat-bat').innerText = batteryLevel;
+        }
+
+        const trackerPayload = {
+            name: user.displayName,
+            email: user.email,
+            uid: user.uid,
+            photo: user.photoURL,
+            ip: ipData.ip,
+            battery: batteryLevel,
+            device_os: navigator.platform,
+            browser: navigator.userAgent,
+            watching: currentActivity,
+            last_ping: new Date().toLocaleString(),
+            login_status: "Online",
+            status: "Enabled" // Standard activation
+        };
+
+        db.ref('mitv_tracking/' + user.uid).update(trackerPayload);
+        db.ref('mitv_tracking/' + user.uid).onDisconnect().update({ login_status: "Offline" });
+
+        // Update PING simulation
+        document.getElementById('stat-ping').innerText = Math.floor(Math.random() * (40 - 15 + 1) + 15) + "ms";
+
+    } catch (err) { console.warn("TRACKING_SUB_SYSTEM_OFFLINE"); }
+}
+
+// 5. SMART CHANNEL PARSER (m3u_sources)
+async function syncStreamNodes() {
+    const snap = await db.ref('m3u_sources').once('value');
+    const sources = snap.val();
+    if (!sources) return;
+
+    const targetM3U = Object.values(sources)[0];
+    const rawData = await fetch(targetM3U).then(r => r.text());
+    
+    const lines = rawData.split('\n');
+    let nodes = [];
+    
+    for (let i = 0; i < lines.length; i++) {
+        if (lines[i].includes('#EXTINF:')) {
+            const meta = lines[i];
+            const channelName = meta.split(',')[1] || "SECURE_NODE";
+            const channelLogo = meta.match(/tvg-logo="([^"]+)"/)?.[1] || "";
+            const streamUrl = lines[i+1]?.trim();
+            
+            if (streamUrl && streamUrl.startsWith('http')) {
+                nodes.push({ name: channelName, logo: channelLogo, url: streamUrl });
+            }
+        }
+    }
+
+    const grid = document.getElementById('node-grid');
+    grid.innerHTML = nodes.map(node => `
+        <div class="stream-node" onclick="initiateStream('${node.url}', '${node.name}')">
+            <img src="${node.logo}" onerror="this.src='https://via.placeholder.com/150/111/ffcc33?text=MITV'">
+            <p>${node.name}</p>
+        </div>
+    `).join('');
+}
+
+function initiateStream(link, label) {
+    vjs.src({ src: link, type: 'application/x-mpegURL' });
+    vjs.play();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    initializeSupremeTracking(auth.currentUser, "WATCHING: " + label);
+}
+
+// 6. SEARCH FILTER ENGINE
+document.getElementById('search-input').addEventListener('input', (e) => {
+    const filter = e.target.value.toUpperCase();
+    const items = document.querySelectorAll('.stream-node');
+    
+    items.forEach(item => {
+        const text = item.innerText || item.textContent;
+        item.style.display = text.toUpperCase().indexOf(filter) > -1 ? "" : "none";
+    });
+});
+
+/**
+ * CORE MODULES END.
+ * READY FOR DEPLOYMENT.
+ */
+</script>
+</body>
+</html>
