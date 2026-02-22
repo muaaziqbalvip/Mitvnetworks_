@@ -2,89 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MITV NETWORK | ULTIMATE HQ</title>
-
-    <link href="https://vjs.zencdn.net/7.20.3/video-js.css" rel="stylesheet" />
-    <link href="https://unpkg.com/@videojs/themes@1.0.1/dist/city/index.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Rajdhani:wght@500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MITV | FINAL FIX</title>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
-
-    <style>
-        :root { --gold: #ffcc33; --bg: #020202; --card: #0a0a0a; --font-head: 'Orbitron', sans-serif; }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: var(--bg); color: white; font-family: 'Rajdhani', sans-serif; overflow-x: hidden; }
-
-        /* --- GATEWAY SCREEN --- */
-        #mitv-gateway { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; justify-content: center; align-items: center; }
-        .login-card { background: var(--card); border: 1px solid var(--gold); padding: 50px; border-radius: 30px; text-align: center; width: 90%; max-width: 400px; box-shadow: 0 0 50px rgba(255,204,51,0.1); }
-        .g-btn { background: white; color: black; border: none; padding: 18px; width: 100%; border-radius: 12px; font-family: var(--font-head); font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 30px; }
-
-        /* --- ACCESS DENIED --- */
-        #ban-shield { position: fixed; inset: 0; background: #000; z-index: 10000; display: none; flex-direction: column; justify-content: center; align-items: center; color: #ff3131; text-align: center; font-family: var(--font-head); }
-
-        /* --- HUD & UI --- */
-        header { padding: 20px 5%; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.9); border-bottom: 1px solid #1a1a1a; position: sticky; top: 0; z-index: 1000; }
-        .profile { display: flex; align-items: center; gap: 10px; background: #111; padding: 5px 15px; border-radius: 50px; border: 1px solid #222; }
-        .profile img { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--gold); }
-
-        .cinema { width: 95%; max-width: 1200px; margin: 20px auto; border-radius: 15px; overflow: hidden; border: 1px solid #222; background: #000; }
-        .search-hud { padding: 0 5%; margin-bottom: 20px; }
-        #search-box { width: 100%; padding: 15px 25px; background: #080808; border: 1px solid #1a1a1a; border-radius: 10px; color: white; font-family: 'Share Tech Mono'; }
-
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; padding: 0 5% 100px; }
-        .node { background: #080808; border: 1px solid #151515; padding: 20px 10px; border-radius: 15px; text-align: center; cursor: pointer; transition: 0.3s; }
-        .node:hover { border-color: var(--gold); transform: translateY(-5px); background: #0c0c0c; }
-        .node img { width: 100%; height: 60px; object-fit: contain; margin-bottom: 10px; }
-        .node p { font-size: 0.75rem; font-weight: bold; color: #888; text-transform: uppercase; }
-
-        @media (max-width: 768px) { .grid { grid-template-columns: repeat(3, 1fr); gap: 8px; } }
-    </style>
 </head>
-<body>
+<body style="background:#000; color:#fff; text-align:center; padding-top:100px; font-family:sans-serif;">
 
-<div id="ban-shield">
-    <i class="fas fa-user-slash" style="font-size: 5rem; margin-bottom: 20px;"></i>
-    <h2>ACCESS TERMINATED</h2>
-    <p style="color: #444; margin-top: 10px;">ID UNVERIFIED OR BLOCKED</p>
-</div>
-
-<div id="mitv-gateway">
-    <div class="login-card">
-        <h1 style="font-family: var(--font-head); color: var(--gold); letter-spacing: 5px;">MITV</h1>
-        <p style="color: #444; font-size: 0.8rem; letter-spacing: 2px;">SECURE SATELLITE NETWORK</p>
-        <button class="g-btn" id="login-btn">
-            <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" width="20">
-            CONNECT WITH GOOGLE
-        </button>
-    </div>
-</div>
-
-<div id="mitv-core" style="display:none;">
-    <header>
-        <div style="font-family: var(--font-head); font-weight: 900; color: var(--gold); font-size: 1.2rem;">MITV_NETWORK</div>
-        <div id="user-hud"></div>
-    </header>
-
-    <div class="cinema">
-        <video id="player" class="video-js vjs-theme-city vjs-big-play-centered" controls preload="auto" style="width:100%; aspect-ratio:16/9;"></video>
+    <div id="login-screen">
+        <h1 style="color:#ffcc33;">MITV LOGIN</h1>
+        <p>Vercel par test karein, storage se nahi.</p>
+        <button id="google-login-btn" style="padding:15px 30px; font-weight:bold; cursor:pointer;">SIGN IN WITH GOOGLE</button>
     </div>
 
-    <div class="search-hud">
-        <input type="text" id="search-box" placeholder="SCAN CHANNELS...">
+    <div id="main-app" style="display:none;">
+        <h2 id="user-name">Welcome</h2>
+        <button onclick="firebase.auth().signOut()">Logout</button>
     </div>
-
-    <div class="grid" id="channel-grid"></div>
-</div>
-
-<script src="https://vjs.zencdn.net/7.20.3/video.min.js"></script>
 
 <script>
-    // 1. PROJECT CONFIGURATION
+    // 1. AAPKI CONFIG (Verified from your screenshot 1000057397.jpg)
     const firebaseConfig = {
         apiKey: "AIzaSyAXzI1yV8oIxnfinfoPD-xyHRVo-jMHFTg",
         authDomain: "mitv-baa8f.firebaseapp.com",
@@ -97,111 +35,35 @@
 
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
-    const db = firebase.database();
-    const vjs = videojs('player');
 
-    // 2. AUTHENTICATION ENGINE
-    document.getElementById('login-btn').addEventListener('click', () => {
+    // 2. LOGIN LOGIC (Mobile ke liye Redirect best hai)
+    document.getElementById('google-login-btn').addEventListener('click', () => {
         const provider = new firebase.auth.GoogleAuthProvider();
-        auth.signInWithPopup(provider).catch(e => alert("Please upload to hosting to use login. Local files not supported."));
+        // Redirect method use karein taake popup block na ho
+        auth.signInWithRedirect(provider);
     });
 
+    // Login hone ke baad ka result check karein
+    auth.getRedirectResult().then((result) => {
+        if (result.user) {
+            console.log("Logged in as:", result.user.displayName);
+        }
+    }).catch((error) => {
+        if (error.code !== 'auth/no-auth-event') {
+            alert("Error: " + error.message);
+        }
+    });
+
+    // UI Update on Auth Change
     auth.onAuthStateChanged(user => {
         if (user) {
-            checkUserStatus(user);
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('main-app').style.display = 'block';
+            document.getElementById('user-name').innerText = "Hello, " + user.displayName;
         } else {
-            document.getElementById('mitv-gateway').style.display = 'flex';
-            document.getElementById('mitv-core').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'block';
+            document.getElementById('main-app').style.display = 'none';
         }
-    });
-
-    // 3. SECURITY SHIELD (Block System)
-    function checkUserStatus(user) {
-        db.ref('mitv_tracking/' + user.uid).on('value', snap => {
-            const data = snap.val();
-            if (data && data.status === "Disabled") {
-                document.getElementById('ban-shield').style.display = 'flex';
-                document.getElementById('mitv-core').style.display = 'none';
-                document.getElementById('mitv-gateway').style.display = 'none';
-            } else {
-                document.getElementById('ban-shield').style.display = 'none';
-                document.getElementById('mitv-gateway').style.display = 'none';
-                document.getElementById('mitv-core').style.display = 'block';
-                setupSystem(user);
-                loadStreams();
-            }
-        });
-    }
-
-    // 4. DIGITAL TRACKER LOGIC
-    async function setupSystem(user, activeNode = "IDLE") {
-        document.getElementById('user-hud').innerHTML = `
-            <div class="profile">
-                <img src="${user.photoURL}">
-                <span style="font-size:0.75rem;">${user.displayName.split(' ')[0]}</span>
-                <i class="fas fa-power-off" onclick="auth.signOut()" style="color:red; cursor:pointer;"></i>
-            </div>
-        `;
-
-        try {
-            const ipData = await fetch('https://api.ipify.org?format=json').then(r => r.json());
-            db.ref('mitv_tracking/' + user.uid).update({
-                name: user.displayName,
-                email: user.email,
-                photo: user.photoURL,
-                ip: ipData.ip,
-                watching: activeNode,
-                last_ping: new Date().toLocaleString(),
-                login_status: "Online"
-            });
-            db.ref('mitv_tracking/' + user.uid).onDisconnect().update({ login_status: "Offline" });
-        } catch(e) {}
-    }
-
-    // 5. CHANNEL ENGINE
-    async function loadStreams() {
-        const snap = await db.ref('m3u_sources').once('value');
-        const sources = snap.val();
-        if(!sources) return;
-
-        const url = Object.values(sources)[0];
-        const res = await fetch(url);
-        const text = await res.text();
-        const channels = [];
-        const lines = text.split('\n');
-
-        for (let i = 0; i < lines.length; i++) {
-            if (lines[i].includes('#EXTINF:')) {
-                const name = lines[i].split(',')[1] || "CHANNEL";
-                const logo = lines[i].match(/tvg-logo="([^"]+)"/)?.[1] || "";
-                const streamUrl = lines[i+1]?.trim();
-                if (streamUrl && streamUrl.startsWith('http')) {
-                    channels.push({ name, logo, url: streamUrl });
-                }
-            }
-        }
-
-        document.getElementById('channel-grid').innerHTML = channels.map(ch => `
-            <div class="node" onclick="play('${ch.url}', '${ch.name}')">
-                <img src="${ch.logo}" onerror="this.src='https://via.placeholder.com/100/111/ffcc33?text=MITV'">
-                <p>${ch.name}</p>
-            </div>
-        `).join('');
-    }
-
-    function play(link, name) {
-        vjs.src({ src: link, type: 'application/x-mpegURL' });
-        vjs.play();
-        window.scrollTo({top: 0, behavior: 'smooth'});
-        setupSystem(auth.currentUser, "Watching: " + name);
-    }
-
-    // SEARCH LOGIC
-    document.getElementById('search-box').addEventListener('input', (e) => {
-        const term = e.target.value.toLowerCase();
-        document.querySelectorAll('.node').forEach(n => {
-            n.style.display = n.innerText.toLowerCase().includes(term) ? 'block' : 'none';
-        });
     });
 </script>
 </body>
