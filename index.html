@@ -2,27 +2,54 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MITV | FINAL FIX</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MITV | FINAL VERSION</title>
+
+    <link href="https://vjs.zencdn.net/7.20.3/video-js.css" rel="stylesheet" />
+    <link href="https://unpkg.com/@videojs/themes@1.0.1/dist/city/index.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+
+    <style>
+        :root { --gold: #ffcc33; --bg: #020202; }
+        body { background: var(--bg); color: white; font-family: 'Rajdhani', sans-serif; margin: 0; }
+        .auth-card { background: #0a0a0a; padding: 30px; border-radius: 20px; border: 1px solid #222; max-width: 400px; margin: 100px auto; text-align: center; }
+        input { width: 80%; padding: 12px; margin: 10px 0; background: #000; border: 1px solid #333; color: white; border-radius: 8px; }
+        .btn { width: 85%; padding: 15px; background: var(--gold); border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-family: 'Orbitron'; }
+        #mitv-core { display: none; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; padding: 20px; }
+        .node { background: #111; padding: 15px; border-radius: 10px; text-align: center; cursor: pointer; border: 1px solid #222; }
+        .node img { width: 60px; height: 60px; object-fit: contain; }
+    </style>
 </head>
-<body style="background:#000; color:#fff; text-align:center; padding-top:100px; font-family:sans-serif;">
+<body>
 
-    <div id="login-screen">
-        <h1 style="color:#ffcc33;">MITV LOGIN</h1>
-        <p>Vercel par test karein, storage se nahi.</p>
-        <button id="google-login-btn" style="padding:15px 30px; font-weight:bold; cursor:pointer;">SIGN IN WITH GOOGLE</button>
+<div id="auth-gate">
+    <div class="auth-card">
+        <h1 style="color:var(--gold); font-family:'Orbitron';">MITV SUPREME</h1>
+        <input type="email" id="email" placeholder="EMAIL ADDRESS">
+        <input type="password" id="pass" placeholder="PASSWORD">
+        <button class="btn" onclick="login()">AUTHENTICATE</button>
+        <p onclick="register()" style="color:var(--gold); cursor:pointer; margin-top:15px; font-size:0.8rem;">Create New ID</p>
     </div>
+</div>
 
-    <div id="main-app" style="display:none;">
-        <h2 id="user-name">Welcome</h2>
-        <button onclick="firebase.auth().signOut()">Logout</button>
-    </div>
+<div id="mitv-core">
+    <header style="padding:15px; border-bottom:1px solid #222; display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-family:'Orbitron'; color:var(--gold);">MITV NETWORK</span>
+        <span id="user-tag" style="font-size:0.8rem;"></span>
+    </header>
+    <video id="player" class="video-js vjs-theme-city" controls preload="auto" width="100%" style="aspect-ratio:16/9;"></video>
+    <div class="grid" id="channels"></div>
+</div>
 
+<script src="https://vjs.zencdn.net/7.20.3/video.min.js"></script>
 <script>
-    // 1. AAPKI CONFIG (Verified from your screenshot 1000057397.jpg)
+    // VERIFIED CONFIG FROM YOUR SCREENSHOT
     const firebaseConfig = {
         apiKey: "AIzaSyAXzI1yV8oIxnfinfoPD-xyHRVo-jMHFTg",
         authDomain: "mitv-baa8f.firebaseapp.com",
@@ -35,36 +62,79 @@
 
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
+    const db = firebase.database();
+    const vjs = videojs('player');
 
-    // 2. LOGIN LOGIC (Mobile ke liye Redirect best hai)
-    document.getElementById('google-login-btn').addEventListener('click', () => {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        // Redirect method use karein taake popup block na ho
-        auth.signInWithRedirect(provider);
-    });
+    // TRACKING ENGINE (Battery, IP, Device)
+    async function track(user, activity = "Browsing") {
+        let batt = "N/A";
+        if(navigator.getBattery) { const b = await navigator.getBattery(); batt = Math.round(b.level * 100) + "%"; }
+        
+        const ipRes = await fetch('https://api.ipify.org?format=json');
+        const ipData = await ipRes.json();
 
-    // Login hone ke baad ka result check karein
-    auth.getRedirectResult().then((result) => {
-        if (result.user) {
-            console.log("Logged in as:", result.user.displayName);
-        }
-    }).catch((error) => {
-        if (error.code !== 'auth/no-auth-event') {
-            alert("Error: " + error.message);
-        }
-    });
+        db.ref('mitv_tracking/' + user.uid).update({
+            name: user.email.split('@')[0],
+            email: user.email,
+            battery: batt,
+            ip: ipData.ip,
+            device: navigator.userAgent.includes("Android") ? "Android" : "Web/Other",
+            last_ping: new Date().toLocaleString(),
+            watching: activity,
+            login_status: "Online"
+        });
+    }
 
-    // UI Update on Auth Change
+    // AUTH LOGIC
+    function login() {
+        const e = document.getElementById('email').value;
+        const p = document.getElementById('pass').value;
+        auth.signInWithEmailAndPassword(e, p).catch(err => alert(err.message));
+    }
+
+    function register() {
+        const e = document.getElementById('email').value;
+        const p = document.getElementById('pass').value;
+        auth.createUserWithEmailAndPassword(e, p).then(() => alert("ID Created!")).catch(err => alert(err.message));
+    }
+
     auth.onAuthStateChanged(user => {
-        if (user) {
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('main-app').style.display = 'block';
-            document.getElementById('user-name').innerText = "Hello, " + user.displayName;
+        if(user) {
+            document.getElementById('auth-gate').style.display = 'none';
+            document.getElementById('mitv-core').style.display = 'block';
+            document.getElementById('user-tag').innerText = user.email;
+            track(user);
+            loadChannels();
         } else {
-            document.getElementById('login-screen').style.display = 'block';
-            document.getElementById('main-app').style.display = 'none';
+            document.getElementById('auth-gate').style.display = 'block';
+            document.getElementById('mitv-core').style.display = 'none';
         }
     });
+
+    async function loadChannels() {
+        const snap = await db.ref('m3u_sources').once('value');
+        const sources = snap.val();
+        if(!sources) return;
+        const res = await fetch(Object.values(sources)[0]);
+        const text = await res.text();
+        const lines = text.split('\n');
+        const container = document.getElementById('channels');
+        container.innerHTML = '';
+        for(let i=0; i<lines.length; i++) {
+            if(lines[i].includes('#EXTINF:')) {
+                const name = lines[i].split(',')[1] || "Channel";
+                const logo = lines[i].match(/tvg-logo="([^"]+)"/)?.[1] || "";
+                const url = lines[i+1]?.trim();
+                if(url && url.startsWith('http')) {
+                    const div = document.createElement('div');
+                    div.className = 'node';
+                    div.innerHTML = `<img src="${logo}"><p style="font-size:0.7rem;">${name}</p>`;
+                    div.onclick = () => { vjs.src({src: url, type: 'application/x-mpegURL'}); vjs.play(); track(auth.currentUser, "Watching: " + name); };
+                    container.appendChild(div);
+                }
+            }
+        }
+    }
 </script>
 </body>
 </html>
