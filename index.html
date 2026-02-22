@@ -382,6 +382,27 @@
         padding-bottom: 40px !important; 
     }
 }
+header { height: 70px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; background: #000; position: fixed; top: 0; width: 100%; z-index: 2000; border-bottom: 1px solid #1a1a1a; }
+.brand-section { display: flex; align-items: center; gap: 10px; }
+.mi-logo { width: 40px; height: 40px; }
+.brand-text { font-family: var(--font-cyber); color: var(--gold); font-weight: 900; font-size: 0.9rem; }
+.menu-btn { color: var(--gold); font-size: 1.4rem; cursor: pointer; }
+
+/* Side Drawer */
+.side-drawer { position: fixed; top: 0; right: -300px; width: 300px; height: 100%; background: #050505; z-index: 3000; transition: 0.4s; padding: 40px 20px; border-left: 2px solid var(--gold); }
+.side-drawer.active { right: 0; }
+.drawer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2999; display: none; }
+.user-profile-card { text-align: center; border-bottom: 1px solid #1a1a1a; padding-bottom: 20px; margin-bottom: 20px; }
+.drawer-avatar { width: 70px; height: 70px; border-radius: 50%; border: 2px solid var(--gold); }
+.menu-item { display: flex; align-items: center; gap: 15px; padding: 12px; color: #888; cursor: pointer; border-bottom: 1px solid #111; }
+.menu-item i { color: var(--gold); }
+.fa-heart.liked { color: #ff3131 !important; transform: scale(1.2); transition: 0.3s; }
+#total-online { color: var(--success-green); text-shadow: 0 0 5px rgba(57, 255, 20, 0.5); }
+#like-icon.liked {
+    color: #ff3131 !important;
+    text-shadow: 0 0 10px rgba(255, 49, 49, 0.5);
+    transform: scale(1.2);
+}
 
     </style>
 </head>
@@ -441,49 +462,62 @@
 </div>
 
 <div id="mitv-core-ui">
-    <div class="fixed-header-unit">
-        
-        <header>
-            <div class="user-identity">
-                <div class="avatar-frame">
-                    <img src="" id="user-avatar-sync">
-                    <div class="status-dot"></div>
-                </div>
-                <div class="id-details">
-                    <h4 id="user-name-sync">COMMANDER</h4>
-                    <p id="user-exp-sync">EXPIRY: SYNCING...</p>
-                </div>
-            </div>
-            <div class="system-stats">
-                <div class="stat-node">
-                    <p>LATENCY</p>
-                    <h5 id="ping-val">24ms</h5>
-                </div>
-                <div class="stat-node">
-                    <p>SECURITY</p>
-                    <h5 style="color: var(--success-green);">HIGH</h5>
-                </div>
-                <div class="stat-node" onclick="executeLogout()" style="cursor: pointer;">
-                    <i class="fas fa-power-off" style="color: #ff4444; font-size: 1.2rem; margin-top: 5px;"></i>
-                </div>
-            </div>
-        </header>
+    <header>
+        <div class="brand-section">
+            <img src="https://i.ibb.co/39sZdcSw/Untitled-design-20260218-232855-0000-removebg-preview.png" class="mi-logo">
+            <div class="brand-text">MITV NETWORK</div>
+        </div>
+        <div class="menu-btn" onclick="toggleDrawer()">
+            <i class="fas fa-bars-staggered"></i>
+        </div>
+    </header>
 
+    <div class="drawer-overlay" id="drawerOverlay" onclick="toggleDrawer()"></div>
+    <div class="side-drawer" id="sideDrawer">
+        <div class="user-profile-card">
+            <img src="" id="drawer-avatar-sync" class="drawer-avatar">
+            <h3 id="drawer-name-sync" style="font-family: var(--font-cyber); color: #fff; font-size: 1rem;">COMMANDER</h3>
+            <p id="drawer-phone-sync" style="font-family: var(--font-data); color: var(--gold); font-size: 0.7rem;">ID: SYNCING...</p>
+        </div>
+        <ul class="menu-list">
+            <li class="menu-item"><i class="fas fa-clock"></i> <span id="drawer-exp-sync">EXPIRY: SYNCING...</span></li>
+            <li class="menu-item"><i class="fas fa-server"></i> <span>LATENCY: <b id="ping-val">24ms</b></span></li>
+            <li class="menu-item"><i class="fas fa-shield-halved"></i> <span>SECURITY: HIGH</span></li>
+            <li class="menu-item" onclick="executeLogout()" style="color: var(--error-red); margin-top: 30px; border: none;">
+                <i class="fas fa-power-off"></i> <span>TERMINATE SESSION</span>
+            </li>
+            <li class="menu-item" onclick="handleLike()" style="cursor: pointer;">
+    <i class="fas fa-heart" id="like-icon"></i> 
+    <span>APP LIKES: <b id="total-likes">0</b></span>
+</li>
+
+        </ul>
+        <li class="menu-item" style="border-bottom: 2px solid #1a1a1a; margin-bottom: 10px;">
+    <i class="fas fa-users" style="color: var(--success-green);"></i>
+    <span>NETWORK ONLINE: <b id="total-online">1</b></span>
+</li>
+<li class="menu-item" onclick="handleLike()" id="like-section">
+    <i class="fas fa-heart" id="like-icon"></i>
+    <span>APP LIKES: <b id="total-likes">0</b></span>    
+</li>
+
+    </div>
+
+    <div class="fixed-top-section">
         <div class="viewport-section">
             <div class="player-container">
-                <video id="mi-supreme-player" class="video-js vjs-theme-city vjs-big-play-centered" controls preload="auto" width="100%"></video>
+                <video id="mi-supreme-player" class="video-js vjs-theme-city" controls preload="auto" width="100%"></video>
             </div>
         </div>
-
         <div class="search-area">
             <i class="fas fa-satellite-dish"></i>
             <input type="text" id="global-search" placeholder="SCANNING_GLOBAL_STREAMS..." oninput="handleSearch()">
         </div>
     </div>
 
-    <div class="channel-grid" id="main-grid-container">
-        </div>
+    <div class="channel-grid" id="main-grid-container"></div>
 </div>
+
 
 <div id="hardware-hud">
     NODE_ID: <b id="hud-id">UNKNOWN</b><br>
@@ -712,7 +746,6 @@ async function executeLogin() {
 async function initializeSystem(user) {
     currentUser = user;
     
-    // UI Transitions
     document.getElementById('mitv-auth-gate').style.display = 'none';
     document.getElementById('preloader').style.display = 'none';
     document.getElementById('mitv-core-ui').style.display = 'block';
@@ -721,17 +754,26 @@ async function initializeSystem(user) {
         document.getElementById('mitv-core-ui').style.opacity = '1';
     }, 100);
 
-    // Sync HUD Elements
-    document.getElementById('user-avatar-sync').src = user.photo;
-    document.getElementById('user-name-sync').innerText = user.name.toUpperCase();
-    document.getElementById('user-exp-sync').innerText = "EXPIRY: " + new Date(user.expiry).toLocaleDateString();
-    document.getElementById('hud-id').innerText = user.phone;
-
-    // Boot Deep Tracking
-    runDeepIntelligence(user);
+    // --- SYNC DATA TO DRAWER (Errors Fix) ---
+    // Hum un IDs ko target kar rahe hain jo humne naye HTML mein di hain
+    if(document.getElementById('drawer-avatar-sync')) document.getElementById('drawer-avatar-sync').src = user.photo;
+    if(document.getElementById('drawer-name-sync')) document.getElementById('drawer-name-sync').innerText = user.name.toUpperCase();
+    if(document.getElementById('drawer-phone-sync')) document.getElementById('drawer-phone-sync').innerText = "ID: " + user.phone;
+    if(document.getElementById('drawer-exp-sync')) document.getElementById('drawer-exp-sync').innerText = "EXPIRY: " + new Date(user.expiry).toLocaleDateString();
     
-    // Boot Playlist Engine
+    // HUD Sync
+    if(document.getElementById('hud-id')) document.getElementById('hud-id').innerText = user.phone;
+
+    runDeepIntelligence(user);
     startPlaylistEngine();
+}
+
+// Menu Toggle Function
+function toggleDrawer() {
+    const drawer = document.getElementById('sideDrawer');
+    const overlay = document.getElementById('drawerOverlay');
+    drawer.classList.toggle('active');
+    overlay.style.display = drawer.classList.contains('active') ? 'block' : 'none';
 }
 
 // ==========================================
@@ -937,6 +979,96 @@ function renderChannels(list) {
         const ping = Math.floor(Math.random() * 20) + 15;
         document.getElementById('ping-val').innerText = ping + "ms";
     }, 5000);
+// --- LIVE VIEWERS & LIKE SYSTEM ---
+
+function syncLiveStats() {
+    // 1. Online Viewers Logic
+    const onlineRef = db.ref('network_stats/online_viewers');
+    
+    // Jab user connect ho, count barhao
+    onlineRef.transaction(current => (current || 0) + 1);
+    
+    // Jab user app band kare, count kam karo
+    onlineRef.onDisconnect().transaction(current => (current || 0) - 1);
+    
+    // UI Update
+    onlineRef.on('value', snap => {
+        document.getElementById('total-online').innerText = snap.val() || 1;
+    });
+
+    // 2. Likes Logic
+    const likesRef = db.ref('network_stats/total_likes');
+    likesRef.on('value', snap => {
+        document.getElementById('total-likes').innerText = snap.val() || 0;
+    });
+}
+
+async function handleLike() {
+    const likeIcon = document.getElementById('like-icon');
+    if(likeIcon.classList.contains('liked')) return; // Ek baar hi like ho sakega
+
+    const likesRef = db.ref('network_stats/total_likes');
+    await likesRef.transaction(current => (current || 0) + 1);
+    
+    likeIcon.classList.add('liked', 'animate__animated', 'animate__heartBeat');
+    localStorage.setItem('mitv_liked', 'true');
+}
+
+// Check if already liked on boot
+if(localStorage.getItem('mitv_liked')) {
+    setTimeout(() => {
+        document.getElementById('like-icon').classList.add('liked');
+    }, 2000);
+}
+
+// Is function ko initializeSystem ke andar call karein
+// syncLiveStats(); 
+// --- LIVE LIKE SYSTEM ---
+
+// 1. Database se real-time likes fetch karna
+function syncLikes() {
+    const likesRef = db.ref('network_stats/total_likes');
+    likesRef.on('value', (snap) => {
+        const count = snap.val() || 0;
+        document.getElementById('total-likes').innerText = count;
+    });
+
+    // Check agar user ne pehle hi like kiya hua hai (Local Storage)
+    if (localStorage.getItem('mitv_user_liked')) {
+        document.getElementById('like-icon').classList.add('liked');
+    }
+}
+
+// 2. Click karne par like handle karna
+async function handleLike() {
+    const likeIcon = document.getElementById('like-icon');
+    
+    // Agar pehle hi like hai toh dubara na ho
+    if (localStorage.getItem('mitv_user_liked')) {
+        alert("You already liked MITV!");
+        return;
+    }
+
+    const likesRef = db.ref('network_stats/total_likes');
+    
+    try {
+        // Firebase mein count barhana
+        await likesRef.transaction((currentCount) => {
+            return (currentCount || 0) + 1;
+        });
+
+        // UI Update aur Local Memory save
+        likeIcon.classList.add('liked', 'animate__animated', 'animate__heartBeat');
+        localStorage.setItem('mitv_user_liked', 'true');
+        
+        console.log("MITV_STATS: Like Registered");
+    } catch (error) {
+        console.error("LIKE_ERROR:", error);
+    }
+}
+
+// Is function ko initializeSystem ke andar call karein
+// syncLikes();
 
 </script>
 </body>
