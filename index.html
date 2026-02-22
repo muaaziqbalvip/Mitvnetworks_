@@ -110,64 +110,222 @@
         }
         .auth-btn:hover { transform: translateY(-3px); box-shadow: 0 0 25px var(--gold-glow); background: #fff; }
 
-        /* --- DASHBOARD ELEMENTS --- */
+                  /* --- 1. DASHBOARD BASE (REFINED) --- */
         #mitv-core-ui { display: none; opacity: 0; transition: opacity 1s ease; }
         
+        /* HEADER: Compact & Fixed */
         header {
-            padding: 15px 5%; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px);
-            border-bottom: 1px solid #151515; display: flex; justify-content: space-between;
-            align-items: center; position: sticky; top: 0; z-index: 1000;
+            padding: 0 15px; /* Side padding kam ki hai taake space mile */
+            background: rgba(0,0,0,0.98); /* Background ko mazeed dark kiya */
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid #1a1a1a; 
+            display: flex; 
+            justify-content: space-between;
+            align-items: center; 
+            position: fixed; 
+            top: 0; 
+            left: 0;
+            width: 100%;
+            height: 70px; /* Standard Height */
+            z-index: 2000;
         }
 
-        .user-identity { display: flex; align-items: center; gap: 15px; }
-        .avatar-frame { width: 55px; height: 55px; border-radius: 50%; border: 2px solid var(--gold); padding: 3px; position: relative; }
-        .avatar-frame img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
-        .status-dot { width: 12px; height: 12px; background: var(--success-green); border: 2px solid #000; border-radius: 50%; position: absolute; bottom: 2px; right: 2px; }
-
-        .id-details h4 { font-family: var(--font-cyber); font-size: 0.8rem; color: #fff; letter-spacing: 1px; }
-        .id-details p { font-family: var(--font-data); font-size: 0.65rem; color: var(--gold); }
-
-        .system-stats { display: flex; gap: 20px; }
-        .stat-node { text-align: right; border-right: 1px solid #222; padding-right: 15px; }
-        .stat-node:last-child { border: none; }
-        .stat-node p { font-size: 0.55rem; color: #555; font-weight: 700; text-transform: uppercase; }
-        .stat-node h5 { font-family: var(--font-data); color: var(--neon-blue); font-size: 0.8rem; }
-
-        /* --- CINEMATIC VIEWPORT --- */
-        .viewport-section { width: 100%; max-width: 1400px; margin: 30px auto; padding: 0 15px; }
-        .player-container {
-            width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 25px;
-            overflow: hidden; border: 1px solid #1a1a1a; box-shadow: 0 30px 80px rgba(0,0,0,1);
+        /* User Info Section */
+        .user-identity { 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            flex: 1; /* Left side cover karega */
+        }
+        
+        .avatar-frame { 
+            width: 42px; 
+            height: 42px; 
+            border-radius: 50%; 
+            border: 2px solid var(--gold); 
+            padding: 2px; 
             position: relative;
+            background: #111;
+        }
+        
+        .avatar-frame img { 
+            width: 100%; 
+            height: 100%; 
+            border-radius: 50%; 
+            object-fit: cover; 
+        }
+        
+        .status-dot { 
+            width: 9px; 
+            height: 9px; 
+            background: var(--success-green); 
+            border: 1.5px solid #000; 
+            border-radius: 50%; 
+            position: absolute; 
+            bottom: 0px; 
+            right: 0px; 
+            box-shadow: 0 0 5px var(--success-green);
         }
 
-        /* --- SEARCH & FILTER HUD --- */
-        .search-area { width: 100%; max-width: 900px; margin: 30px auto; padding: 0 20px; position: relative; }
-        .search-area i { position: absolute; left: 40px; top: 50%; transform: translateY(-50%); color: var(--gold); font-size: 1.1rem; }
-        #global-search {
-            width: 100%; background: #080808; border: 1px solid #151515; padding: 20px 20px 20px 65px;
-            color: #fff; border-radius: 18px; font-family: var(--font-data); font-size: 1rem;
+        .id-details {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .id-details h4 { 
+            font-family: var(--font-cyber); 
+            font-size: 0.75rem; 
+            color: #fff; 
+            letter-spacing: 0.5px; 
+            text-transform: uppercase;
+            line-height: 1.1;
+        }
+        
+        .id-details p { 
+            font-family: var(--font-data); 
+            font-size: 0.55rem; 
+            color: var(--gold); 
+            margin-top: 2px;
+        }
+
+        /* System Stats Section (Right Side) */
+        .system-stats {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .stat-node { 
+            text-align: right; 
+            padding-right: 10px;
+            border-right: 1px solid #222;
+        }
+        
+        .stat-node:last-of-type { 
+            border-right: none; 
+            padding-right: 0;
+        }
+
+        .stat-node p { 
+            font-size: 0.5rem; 
+            color: #666; 
+            font-weight: 700; 
+            text-transform: uppercase; 
+            letter-spacing: 1px;
+        }
+        
+        .stat-node h5 { 
+            font-family: var(--font-data); 
+            color: var(--neon-blue); 
+            font-size: 0.7rem; 
+            line-height: 1;
+        }
+
+        /* Power Icon Styling */
+        .logout-btn {
+            cursor: pointer;
+            padding: 5px;
             transition: var(--transition);
         }
-        #global-search:focus { border-color: var(--gold); background: #0c0c0c; box-shadow: 0 0 20px rgba(255,204,51,0.1); }
+        
+        .logout-btn:active {
+            transform: scale(0.8);
+        }
 
-        /* --- DYNAMIC CHANNEL GRID --- */
+        /* --- 2. PLAYER: Header ke niche lock --- */
+        .viewport-section { 
+            width: 100%; 
+            position: fixed; 
+            top: 70px; /* Header ki height ke baad */
+            left: 0;
+            z-index: 1999;
+            background: #000;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        .player-container {
+            width: 100%; 
+            aspect-ratio: 16/9; 
+            background: #000; 
+            border-radius: 0; 
+            border-bottom: 1px solid #1a1a1a;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.9);
+        }
+
+        /* --- 3. SEARCH BAR: Player ke niche lock --- */
+        .search-area { 
+            position: fixed;
+            top: calc(56.25vw + 70px); /* Player (16/9 ratio) + Header space */
+            left: 0;
+            width: 100%;
+            max-width: 100% !important;
+            background: var(--deep-bg);
+            margin: 0 !important;
+            padding: 12px 20px;
+            z-index: 1998;
+            border-bottom: 2px solid var(--gold);
+        }
+
+        .search-area i { 
+            position: absolute; 
+            left: 35px; 
+            top: 50%; 
+            transform: translateY(-50%); 
+            color: var(--gold); 
+            font-size: 1rem; 
+            z-index: 10;
+        }
+
+        #global-search {
+            width: 100%; 
+            background: #080808; 
+            border: 1px solid #222; 
+            padding: 14px 14px 14px 50px;
+            color: white; 
+            border-radius: 12px; 
+            font-family: var(--font-data);
+            font-size: 0.9rem;
+        }
+
+        /* --- 4. CHANNELS: Sirf ye area scroll hoga --- */
         .channel-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 20px; padding: 20px 5% 150px; max-width: 1500px; margin: auto;
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 15px; 
+            /* Margin-top calculate karega total fixed space (Header + Player + Search) */
+            margin-top: calc(56.25vw + 155px) !important; 
+            padding: 15px 5% 150px; 
+            max-width: 1500px; 
+            margin-left: auto;
+            margin-right: auto;
         }
 
+        /* Mobile Adjustments */
+        @media (max-width: 768px) {
+            .channel-grid { 
+                grid-template-columns: repeat(3, 1fr); 
+                gap: 10px; 
+                /* Mobile par thoda extra margin for safety */
+                margin-top: calc(56.25vw + 150px) !important;
+            }
+            .id-details h4 { font-size: 0.6rem; }
+            .avatar-frame { width: 38px; height: 38px; }
+        }
+
+        /* UI Nodes */
         .node-card {
-            background: linear-gradient(145deg, #0a0a0a, #050505); border: 1px solid #151515; border-radius: 22px;
-            padding: 30px 15px; text-align: center; cursor: pointer; transition: var(--transition);
-            position: relative; overflow: hidden;
+            background: var(--surface-low);
+            border: 1px solid #111;
+            border-radius: 12px;
+            padding: 15px 5px;
+            text-align: center;
+            transition: var(--transition);
         }
-        .node-card:hover { 
-            border-color: var(--gold); transform: translateY(-10px) scale(1.05); 
-            background: #0d0d0d; box-shadow: 0 15px 30px rgba(0,0,0,0.5);
-        }
-        .node-card img { width: 65px; height: 65px; object-fit: contain; margin-bottom: 18px; filter: drop-shadow(0 5px 10px #000); }
-        .node-card p { font-family: var(--font-cyber); font-size: 0.7rem; color: #888; letter-spacing: 1.5px; text-transform: uppercase; }
+        .node-card:active { transform: scale(0.95); border-color: var(--gold); }
+        .node-card img { width: 45px; height: 45px; object-fit: contain; margin-bottom: 8px; }
+        .node-card p { font-family: var(--font-cyber); font-size: 0.55rem; color: #888; text-transform: uppercase; }
 
         /* --- SUPREME TELEMETRY HUD --- */
         #hardware-hud {
@@ -188,6 +346,43 @@
             header { padding: 15px 4%; }
             .avatar-frame { width: 45px; height: 45px; }
         }
+        /* --- COMPACT BRANDING FOOTER --- */
+.cyber-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 25px; /* Bohat chota aur clean */
+    background: rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(5px);
+    border-top: 1px solid #1a1a1a;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 3000;
+    pointer-events: none; /* Is par click nahi hoga, niche wale buttons kaam karenge */
+}
+
+.footer-text {
+    font-family: var(--font-data);
+    font-size: 0.55rem; /* Ekdum chota size */
+    color: #444;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.footer-text b {
+    color: var(--gold);
+    font-weight: normal;
+}
+
+/* Mobile par padding adjust karein taake grid block na ho */
+@media (max-width: 768px) {
+    .channel-grid {
+        padding-bottom: 40px !important; 
+    }
+}
+
     </style>
 </head>
 <body>
@@ -246,41 +441,44 @@
 </div>
 
 <div id="mitv-core-ui">
-    <header>
-        <div class="user-identity">
-            <div class="avatar-frame">
-                <img src="" id="user-avatar-sync">
-                <div class="status-dot"></div>
+    <div class="fixed-header-unit">
+        
+        <header>
+            <div class="user-identity">
+                <div class="avatar-frame">
+                    <img src="" id="user-avatar-sync">
+                    <div class="status-dot"></div>
+                </div>
+                <div class="id-details">
+                    <h4 id="user-name-sync">COMMANDER</h4>
+                    <p id="user-exp-sync">EXPIRY: SYNCING...</p>
+                </div>
             </div>
-            <div class="id-details">
-                <h4 id="user-name-sync">COMMANDER</h4>
-                <p id="user-exp-sync">EXPIRY: SYNCING...</p>
+            <div class="system-stats">
+                <div class="stat-node">
+                    <p>LATENCY</p>
+                    <h5 id="ping-val">24ms</h5>
+                </div>
+                <div class="stat-node">
+                    <p>SECURITY</p>
+                    <h5 style="color: var(--success-green);">HIGH</h5>
+                </div>
+                <div class="stat-node" onclick="executeLogout()" style="cursor: pointer;">
+                    <i class="fas fa-power-off" style="color: #ff4444; font-size: 1.2rem; margin-top: 5px;"></i>
+                </div>
             </div>
-        </div>
-        <div class="system-stats">
-            <div class="stat-node">
-                <p>LATENCY</p>
-                <h5 id="ping-val">24ms</h5>
-            </div>
-            <div class="stat-node">
-                <p>SECURITY</p>
-                <h5 style="color: var(--success-green);">HIGH</h5>
-            </div>
-            <div class="stat-node" onclick="location.reload()" style="cursor: pointer;">
-                <i class="fas fa-power-off" style="color: var(--error-red); font-size: 1.2rem; margin-top: 5px;"></i>
-            </div>
-        </div>
-    </header>
+        </header>
 
-    <div class="viewport-section">
-        <div class="player-container">
-            <video id="mi-supreme-player" class="video-js vjs-theme-city vjs-big-play-centered" controls preload="auto" width="100%"></video>
+        <div class="viewport-section">
+            <div class="player-container">
+                <video id="mi-supreme-player" class="video-js vjs-theme-city vjs-big-play-centered" controls preload="auto" width="100%"></video>
+            </div>
         </div>
-    </div>
 
-    <div class="search-area">
-        <i class="fas fa-satellite-dish"></i>
-        <input type="text" id="global-search" placeholder="SCANNING_GLOBAL_STREAMS..." oninput="handleSearch()">
+        <div class="search-area">
+            <i class="fas fa-satellite-dish"></i>
+            <input type="text" id="global-search" placeholder="SCANNING_GLOBAL_STREAMS..." oninput="handleSearch()">
+        </div>
     </div>
 
     <div class="channel-grid" id="main-grid-container">
@@ -296,6 +494,11 @@
     POWER_RESERVE: <span id="hud-batt">100%</span><br>
     UPTIME: <span id="hud-days">0 DAYS</span>
 </div>
+<footer class="cyber-footer">
+    <div class="footer-text">
+        DEVELOPED BY <b>MUAAZ IQBAL</b> | MITV NETWORK ©&® 2026
+    </div>
+</footer>
 
 <script src="https://vjs.zencdn.net/7.20.3/video.min.js"></script>
 
@@ -706,19 +909,21 @@ function renderChannels(list) {
 }
     // 8. ACTIVITY & STREAMING LOGIC
     function launchStream(url, name) {
-        player.src({ src: url, type: 'application/x-mpegURL' });
-        player.play();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+    // 1. Stream Load karein
+    player.src({ src: url, type: 'application/x-mpegURL' });
+    player.play();
 
-        if(currentUser) {
-            db.ref('mitv_tracking/' + currentUser.phone).update({
-                current_action: "Watching: " + name,
-                last_channel_url: url,
-                last_channel_name: name,
-                watch_time: new Date().toLocaleTimeString()
-            });
-        }
+    // 2. AUTO-SCROLL FIX: Is line ko delete ya comment kar dein
+    // window.scrollTo({ top: 0, behavior: 'smooth' }); 
+
+    // 3. Tracking update
+    if(currentUser) {
+        db.ref('mitv_tracking/' + currentUser.phone).update({
+            current_action: "Watching: " + name,
+            last_channel_name: name
+        });
     }
+}
 
     // 9. SEARCH & FILTER LOGIC
     function handleSearch() {
