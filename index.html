@@ -1036,45 +1036,57 @@ async function runDeepIntelligence(user) {
 // ==========================================
 // 7. MULTI-SOURCE M3U ENGINE (FULLY OFFLINE LOGIC)
 // ==========================================
+// ==========================================
+// 7. MULTI-SOURCE M3U ENGINE (FULLY OPTIMIZED)
+// ==========================================
 async function startPlaylistEngine() {
-    console.log("MITV_ENGINE: Initializing Signal Sync...");
+    console.log("📡 MITV_ENGINE: Initializing Signal Sync...");
 
-    // 1. PEHLE OFFLINE DATA LOAD KARO (INSTANT LOAD)
+    // 1. INSTANT OFFLINE LOAD (Pehle Cache se uthao)
     const cachedData = localStorage.getItem('mitv_m3u_cache');
     if (cachedData) {
         try {
             globalChannels = JSON.parse(cachedData);
-            console.log("MITV_OFFLINE: Loaded " + globalChannels.length + " channels from cache.");
+            console.log("📦 MITV_OFFLINE: Loaded " + globalChannels.length + " channels from cache.");
             renderChannels(globalChannels); // Foran display kar do
         } catch (e) {
-            console.error("CACHE_ERROR: Memory corrupted, waiting for network...");
+            console.error("❌ CACHE_ERROR: Memory corrupted.");
         }
     }
 
-    // 2. LIVE FIREBASE SYNC (BACKGROUND UPDATE)
+    // 2. LIVE FIREBASE SYNC (Real-time Background Update)
+    // Jab bhi Admin panel se link badlega, ye function khud chalega
     db.ref('m3u_sources').on('value', async (snap) => {
         if(!snap.exists()) {
-            console.warn("SYSTEM_ALERT: No M3U sources found in database.");
+            console.warn("⚠️ SYSTEM_ALERT: No M3U sources found in database.");
             return;
         }
 
         const data = snap.val();
+        // Firebase se links ko array mein convert karna
         const urls = typeof data === 'object' ? Object.values(data) : [data];
         let newChannels = [];
 
-        // Parallel processing for all M3U links
+        console.log("🔄 MITV_NETWORK: Syncing " + urls.length + " sources...");
+
+        // Saare links se data parallel fetch karna
         const fetchPromises = urls.map(async (url) => {
             try {
-                const res = await fetch(url);
-                if (!res.ok) throw new Error("Network response was not ok");
+                // Cache busting ke liye timestamp add kiya taake purana data na aaye
+                const res = await fetch(url + '?t=' + Date.now());
+                if (!res.ok) throw new Error("Network response failed");
                 
                 const text = await res.text();
                 const lines = text.split('\n');
                 
                 for(let i=0; i<lines.length; i++) {
                     if(lines[i].includes('#EXTINF:')) {
+                        // Channel Name extraction
                         const name = lines[i].split(',')[1]?.trim() || "LIVE_STREAM";
-                        const logo = lines[i].match(/tvg-logo="([^"]+)"/)?.[1] || "https://i.ibb.co/V3pS6L0/tv-icon.png";
+                        // Logo extraction (regex use kiya taake sahi link mile)
+                        const logoMatch = lines[i].match(/tvg-logo="([^"]+)"/);
+                        const logo = logoMatch ? logoMatch[1] : "https://i.ibb.co/V3pS6L0/tv-icon.png";
+                        // Next line stream URL hoti hai
                         const stream = lines[i+1]?.trim();
                         
                         if(stream && stream.startsWith('http')) {
@@ -1083,78 +1095,88 @@ async function startPlaylistEngine() {
                     }
                 }
             } catch (e) { 
-                console.error("LINK_FAIL: Unable to reach " + url); 
+                console.error("❌ LINK_FAIL: Unable to reach " + url); 
             }
         });
 
         await Promise.all(fetchPromises);
         
-        // 3. CLEAN & SYNC
+        // 3. CLEAN, SAVE & REFRESH UI
         if (newChannels.length > 0) {
-            // Filter unique channels by URL
+            // Sirf unique channels rakhein (URL ki bunyad par)
             const uniqueChannels = newChannels.filter((v,i,a) => 
                 a.findIndex(t => (t.url === v.url)) === i
             );
 
-            // Update Global State
+            // Global state aur Cache update karein
             globalChannels = uniqueChannels;
-
-            // --- THE CRITICAL OFFLINE STEP ---
-            // Nayi list ko hamesha ke liye memory mein save kar lo
             localStorage.setItem('mitv_m3u_cache', JSON.stringify(globalChannels));
             
-            console.log("MITV_CACHE: Network sync successful. Offline memory updated.");
+            console.log("✅ MITV_CACHE: Network sync successful. " + globalChannels.length + " channels ready.");
             
-            // UI Update (Background sync ke baad list refresh ho jayegi)
+            // UI refresh karein (Bina page reload kiye naye channels aa jayenge)
             renderChannels(globalChannels);
         }
     });
 }
 
 // ==========================================
-// 8. RENDER ENGINE (OPTIMIZED)
+// 8. RENDER ENGINE (UI GENERATOR)
 // ==========================================
 function renderChannels(list) {
     const container = document.getElementById('main-grid-container');
     if(!container) return;
 
-    // Agar list khali hai aur cache bhi nahi hai
     if (list.length === 0) {
         container.innerHTML = `
             <div style="grid-column: 1/-1; text-align: center; padding: 50px; color: #444;">
-                <i class="fas fa-wifi-slash" style="font-size: 2rem; margin-bottom: 10px;"></i>
-                <p style="font-family: 'Share Tech Mono';">INITIALIZING_FIRST_SYNC...<br>Please connect to internet.</p>
+                <i class="fas fa-satellite-dish animate__animated animate__pulse animate__infinite" style="font-size: 2.5rem; color: var(--gold); margin-bottom: 15px;"></i>
+                <p style="font-family: 'Share Tech Mono'; color: #fff;">ESTABLISHING_LINK...<br><span style="font-size: 0.7rem; color: #555;">PLEASE CONNECT TO DATA COMMAND</span></p>
             </div>
         `;
         return;
     }
 
-    // Filter unique channels one last time for safety
-    const unique = list.filter((v,i,a) => a.findIndex(t => (t.url === v.url)) === i);
-    
-    // Map to HTML
-    container.innerHTML = unique.map(ch => `
-        <div class="node-card animate__animated animate__fadeInUp" onclick="launchStream('${ch.url}', '${ch.name}')">
+    // List ko display karna
+    container.innerHTML = list.map((ch, index) => `
+        <div class="node-card animate__animated animate__fadeInUp" 
+             style="animation-delay: ${index * 0.05}s"
+             onclick="launchStream('${ch.url}', '${ch.name}')">
             <div class="card-glow"></div>
-            <img src="${ch.logo}" loading="lazy" onerror="this.src='https://via.placeholder.com/100/111/ffcc33?text=TV'">
+            <div class="img-wrapper">
+                <img src="${ch.logo}" loading="lazy" onerror="this.src='https://via.placeholder.com/100/111/ffcc33?text=TV'">
+            </div>
             <p>${ch.name}</p>
         </div>
     `).join('');
 }
-    // 8. ACTIVITY & STREAMING LOGIC
-    function launchStream(url, name) {
-    // 1. Stream Load karein
-    player.src({ src: url, type: 'application/x-mpegURL' });
-    player.play();
 
-    // 2. AUTO-SCROLL FIX: Is line ko delete ya comment kar dein
-    // window.scrollTo({ top: 0, behavior: 'smooth' }); 
+// ==========================================
+// 9. ACTIVITY & STREAMING LOGIC
+// ==========================================
+function launchStream(url, name) {
+    // 1. Player mein stream load karein
+    if(typeof player !== 'undefined') {
+        player.src({ src: url, type: 'application/x-mpegURL' });
+        player.play();
+    } else {
+        // Agar standard video tag use ho raha hai
+        const video = document.querySelector('video');
+        if(video) {
+            video.src = url;
+            video.play();
+        }
+    }
 
-    // 3. Tracking update
-    if(currentUser) {
+    // 2. UI Feedback (Neeche scroll nahi hoga)
+    console.log("🎥 NOW_PLAYING: " + name);
+
+    // 3. Admin Tracking (User kya dekh raha hai)
+    if(currentUser && currentUser.phone) {
         db.ref('mitv_tracking/' + currentUser.phone).update({
             current_action: "Watching: " + name,
-            last_channel_name: name
+            last_channel_name: name,
+            last_online: firebase.database.ServerValue.TIMESTAMP
         });
     }
 }

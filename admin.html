@@ -351,9 +351,10 @@
     }
 
     function bootAdminCore() {
-        loadUsers();
-        loadM3UManager();
-    }
+    loadUsers();         // Users ka data load karne ke liye
+    loadM3UManager();    // M3U list load karne ke liye (Sahi naam use karein)
+    syncAuthCodeStatus(); // Auth code dikhane ke liye
+}
 
     // 2. M3U MANAGER LOGIC (ADD, EDIT, DELETE)
     function deployNewM3U() {
@@ -510,11 +511,6 @@ function syncAuthCodeStatus() {
 }
 
 // 2. Isay bootAdminCore() ke andar shamil kar dein
-function bootAdminCore() {
-    loadUsers();
-    loadM3UHistory();
-    syncAuthCodeStatus(); // Ye line lazmi add karein
-}
 function pushGlobalAd() {
     const title = document.getElementById('ad-title').value;
     const img = document.getElementById('ad-img').value;
