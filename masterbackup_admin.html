@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MITV | MASTER KEY CONTROLLER</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+
+    <style>
+        :root {
+            --gold: #ffcc33;
+            --bg: #010101;
+            --surface: #0a0a0a;
+            --font-main: 'Rajdhani', sans-serif;
+            --font-cyber: 'Orbitron', sans-serif;
+            --font-data: 'Share Tech Mono', monospace;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; outline: none; }
+        body {
+            background: var(--bg); color: #fff; font-family: var(--font-main);
+            background-image: linear-gradient(rgba(0,0,0,0.9), rgba(0,0,0,0.9)), 
+                              url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
+            height: 100vh; display: flex; justify-content: center; align-items: center;
+        }
+
+        /* MASTER LOCK SCREEN */
+        #master-auth-screen {
+            width: 100%; max-width: 400px; background: var(--surface);
+            padding: 40px; border-radius: 25px; border: 1px solid #1a1a1a;
+            border-top: 4px solid var(--gold); text-align: center;
+            box-shadow: 0 0 50px rgba(0,0,0,1);
+        }
+
+        /* KEY UPDATE PANEL */
+        #key-update-panel {
+            display: none; width: 100%; max-width: 450px; background: var(--surface);
+            padding: 40px; border-radius: 25px; border: 1px solid #1a1a1a;
+            border-top: 4px solid #00f2ff; text-align: center;
+        }
+
+        .input-box {
+            width: 100%; background: #000; border: 1px solid #222; padding: 15px;
+            color: #fff; border-radius: 12px; font-family: var(--font-data);
+            margin: 20px 0; text-align: center; font-size: 1.1rem;
+        }
+
+        .btn-action {
+            width: 100%; padding: 15px; background: var(--gold); border: none;
+            border-radius: 12px; font-family: var(--font-cyber); font-weight: 900;
+            cursor: pointer; transition: 0.3s; letter-spacing: 2px;
+        }
+        .btn-action:hover { background: #fff; transform: scale(1.02); }
+
+        .status-msg { margin-top: 15px; font-family: var(--font-data); font-size: 0.7rem; color: #555; }
+    </style>
+</head>
+<body>
+
+<div id="master-auth-screen" class="animate__animated animate__fadeInDown">
+    <i class="fas fa-user-secret fa-3x" style="color:var(--gold); margin-bottom:20px;"></i>
+    <h2 style="font-family:var(--font-cyber); font-size:1rem; letter-spacing:2px;">MASTER_ACCESS</h2>
+    <input type="password" id="fixed-pass-input" class="input-box" placeholder="ENTER FIXED MASTER CODE">
+    <button class="btn-action" onclick="verifyFixedPass()">UNLOCK CONTROLLER</button>
+    <p class="status-msg">Hint: Authorized Muaaz Iqbal Only</p>
+</div>
+
+<div id="key-update-panel" class="animate__animated animate__zoomIn">
+    <i class="fas fa-key fa-3x" style="color:#00f2ff; margin-bottom:20px;"></i>
+    <h2 style="font-family:var(--font-cyber); font-size:1rem; letter-spacing:2px;">UPDATE_ADMIN_LOCK</h2>
+    <p style="font-size:0.7rem; color:#666; margin-top:10px;">Yahan naya code likhen jo Admin Panel ko kholne ke liye use hoga.</p>
+    
+    <input type="text" id="new-admin-lock" class="input-box" placeholder="NEW ADMIN LOCK CODE">
+    
+    <button class="btn-action" style="background:#00f2ff; color:#000;" onclick="pushNewAdminLock()">DEPLOY NEW LOCK</button>
+    <button class="btn-action" style="background:transparent; color:#444; margin-top:10px; border:1px solid #222;" onclick="location.reload()">LOGOUT</button>
+    
+    <p id="result-log" class="status-msg"></p>
+</div>
+
+<script>
+    // FIREBASE INITIALIZE
+    const firebaseConfig = {
+        databaseURL: "https://mitv-baa8f-default-rtdb.firebaseio.com/",
+        projectId: "mitv-baa8f"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // 1. VERIFY FIXED MASTER CODE
+    function verifyFixedPass() {
+        const input = document.getElementById('fixed-pass-input').value;
+        const MASTER_FIXED = "MUAAZPANEL786"; // FIXED CODE AS REQUESTED
+
+        if(input === MASTER_FIXED) {
+            document.getElementById('master-auth-screen').style.display = 'none';
+            document.getElementById('key-update-panel').style.display = 'block';
+        } else {
+            alert("SECURITY_BREACH: Access Denied. Wrong Master Code.");
+        }
+    }
+
+    // 2. PUSH NEW LOCK TO DATABASE
+    function pushNewAdminLock() {
+        const newCode = document.getElementById('new-admin-lock').value;
+        const log = document.getElementById('result-log');
+
+        if(!newCode) {
+            alert("Please enter a code!");
+            return;
+        }
+
+        log.innerText = "SENDING_DATA_TO_ENCRYPTED_DB...";
+
+        db.ref('admin_settings/master_auth_code').set(newCode)
+        .then(() => {
+            log.style.color = "#39ff14";
+            log.innerText = "SUCCESS: ADMIN LOCK UPDATED TO: " + newCode;
+            document.getElementById('new-admin-lock').value = '';
+            alert("Admin Panel Lock has been changed successfully!");
+        })
+        .catch((error) => {
+            log.style.color = "red";
+            log.innerText = "CRITICAL_ERROR: Failed to update.";
+        });
+    }
+</script>
+
+</body>
+</html>
