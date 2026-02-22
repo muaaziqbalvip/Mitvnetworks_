@@ -313,300 +313,397 @@
     */
 
     // 1. FIREBASE INITIALIZATION
-    const firebaseConfig = {
-        apiKey: "AIzaSyAXzI1yV8oIxnfinfoPD-xyHRVo-jMHFTg",
-        databaseURL: "https://mitv-baa8f-default-rtdb.firebaseio.com/",
-        projectId: "mitv-baa8f"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    const player = videojs('mi-supreme-player', { 
-        fluid: true,
-        controlBar: { skipButtons: { forward: 10, backward: 10 } }
-    });
+    /* MITV SUPREME | GLOBAL CONTROL INTERFACE 
+   ENGINE VERSION: 7.0 (SUPREME PERSISTENCE)
+   DEVELOPER: GEMINI AI FOR MUAAZ IQBAL
+*/
 
-    let currentUser = null;
-    let globalChannels = [];
+const firebaseConfig = {
+    apiKey: "AIzaSyAXzI1yV8oIxnfinfoPD-xyHRVo-jMHFTg",
+    databaseURL: "https://mitv-baa8f-default-rtdb.firebaseio.com/",
+    projectId: "mitv-baa8f"
+};
 
-    // Preloader Logic
-    window.addEventListener('load', () => {
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// Global State Management
+let currentUser = null;
+let globalChannels = [];
+const player = videojs('mi-supreme-player', { 
+    fluid: true,
+    autoplay: false,
+    controls: true,
+    responsive: true,
+    controlBar: { skipButtons: { forward: 10, backward: 10 } }
+});
+
+// ==========================================
+// 1. AUTO-LOGIN SYSTEM (PERSISTENT MEMORY)
+// ==========================================
+window.addEventListener('DOMContentLoaded', async () => {
+    console.log("MITV_CORE: Initializing System Boot...");
+    
+    // Check local memory for saved session
+    const savedSession = localStorage.getItem('mitv_supreme_session');
+    
+    if (savedSession) {
+        try {
+            const sessionData = JSON.parse(savedSession);
+            
+            // Database Validation (Account Protection)
+            const snap = await db.ref('mitv_users/' + sessionData.phone).once('value');
+            const user = snap.val();
+
+            if (user && user.status === "Active" && new Date() < new Date(user.expiry)) {
+                console.log("MITV_AUTH: Saved Session Verified. Bypassing Login.");
+                // Sync session to global state
+                currentUser = user;
+                initializeSystem(user);
+            } else {
+                console.warn("MITV_AUTH: Session Expired or Account Suspended.");
+                clearSession();
+            }
+        } catch (e) {
+            console.error("MITV_AUTH: Memory Corruption. Clearing Data.");
+            clearSession();
+        }
+    } else {
+        // No session, show login after preloader
         setTimeout(() => {
             document.getElementById('preloader').style.display = 'none';
         }, 2000);
-    });
+    }
+});
 
-    // 2. INTERFACE NAVIGATION LOGIC
-    function switchPanel(panel) {
-        const login = document.getElementById('login-panel');
-        const reg = document.getElementById('reg-panel');
-        if(panel === 'reg') {
-            login.style.display = 'none';
-            reg.style.display = 'block';
-        } else {
-            login.style.display = 'block';
-            reg.style.display = 'none';
-        }
+function clearSession() {
+    localStorage.removeItem('mitv_supreme_session');
+    document.getElementById('preloader').style.display = 'none';
+    document.getElementById('mitv-auth-gate').style.display = 'flex';
+}
+
+// ==========================================
+// 2. INTERFACE NAVIGATION
+// ==========================================
+function switchPanel(panel) {
+    const login = document.getElementById('login-panel');
+    const reg = document.getElementById('reg-panel');
+    const authGate = document.getElementById('mitv-auth-gate');
+    
+    authGate.classList.add('animate__animated', 'animate__fadeIn');
+    if(panel === 'reg') {
+        login.style.display = 'none';
+        reg.style.display = 'block';
+    } else {
+        login.style.display = 'block';
+        reg.style.display = 'none';
+    }
+}
+
+// ==========================================
+// 3. SECURE REGISTRATION ENGINE
+// ==========================================
+async function executeRegistration() {
+    const name = document.getElementById('reg-name').value;
+    const phone = document.getElementById('reg-phone').value;
+    const pass = document.getElementById('reg-pass').value;
+    const auth = document.getElementById('reg-auth-code').value;
+    const photo = document.getElementById('reg-photo').value || "https://i.ibb.co/0nf76M9/user-avatar.png";
+
+    if(!name || !phone || !pass || !auth) {
+        alert("CRITICAL: All security protocols must be filled.");
+        return;
     }
 
-    // 3. SECURE REGISTRATION ENGINE (ADMIN AUTH CODE)
-    async function executeRegistration() {
-        const name = document.getElementById('reg-name').value;
-        const phone = document.getElementById('reg-phone').value;
-        const pass = document.getElementById('reg-pass').value;
-        const auth = document.getElementById('reg-auth-code').value;
-        const photo = document.getElementById('reg-photo').value || "https://i.ibb.co/0nf76M9/user-avatar.png";
-
-        if(!name || !phone || !pass || !auth) return alert("CRITICAL: All security protocols must be filled.");
-
-        // Admin Auth Code Check
-        const authSnap = await db.ref('admin_settings/master_auth_code').once('value');
-        if(auth !== authSnap.val()) return alert("SECURITY_BREACH: Invalid Admin Authentication Code.");
-
-        const userRef = db.ref('mitv_users/' + phone);
-        const check = await userRef.once('value');
-        if(check.exists()) return alert("DUPLICATE_NODE: This mobile number is already registered.");
-
-        const expiry = new Date();
-        expiry.setDate(expiry.getDate() + 30);
-
-        userRef.set({
-            name, phone, password: pass, photo,
-            expiry: expiry.toISOString(),
-            status: "Active",
-            registered_on: new Date().toISOString()
-        }).then(() => {
-            alert("SUCCESS: Commander ID registered to Global Network.");
-            switchPanel('login');
-        });
+    // Master Key Authentication
+    const authSnap = await db.ref('admin_settings/master_auth_code').once('value');
+    if(auth !== authSnap.val()) {
+        alert("SECURITY_BREACH: Invalid Admin Authentication Code.");
+        return;
     }
 
-    // 4. SUPREME LOGIN ENGINE (EXPIRY & STATUS SHIELD)
-    async function executeLogin() {
+    // Duplicate Check
+    const check = await db.ref('mitv_users/' + phone).once('value');
+    if(check.exists()) {
+        alert("DUPLICATE_NODE: This mobile number is already in the network.");
+        return;
+    }
+
+    const expiry = new Date();
+    expiry.setDate(expiry.getDate() + 30); // 1 Month Plan
+
+    const userData = {
+        name, phone, password: pass, photo,
+        expiry: expiry.toISOString(),
+        status: "Active",
+        registered_on: new Date().toISOString()
+    };
+
+    db.ref('mitv_users/' + phone).set(userData).then(() => {
+        alert("SUCCESS: Commander ID registered to Global Network.");
+        switchPanel('login');
+    }).catch(err => alert("DB_ERROR: " + err.message));
+}
+
+// ==========================================
+// 4. SUPREME LOGIN ENGINE (WITH AUTO-SAVE)
+// ==========================================
+async function executeLogin() {
     const phone = document.getElementById('login-phone').value;
     const pass = document.getElementById('login-pass').value;
 
-    // 1. INPUT VALIDATION
     if(!phone || !pass) {
         alert("CRITICAL_ERROR: Access Credentials Required.");
         return;
     }
 
-    // Loader Show (Optional: Agar aapne loader lagaya hai)
-    console.log("MITV_AUTH: Initiating Secure Handshake...");
-
     try {
-        // 2. DATABASE SEARCH
         const snap = await db.ref('mitv_users/' + phone).once('value');
         
         if(!snap.exists()) {
-            alert("SECURITY_ALERT: Unauthorized Node ID. Please register first.");
+            alert("SECURITY_ALERT: Unauthorized Node ID.");
             return;
         }
 
         const user = snap.val();
 
-        // 3. PASSWORD VERIFICATION
         if(user.password !== pass) {
-            // Track Failed Attempt (Security Log)
             db.ref('mitv_security_logs/' + phone).push({
                 event: "FAILED_LOGIN",
-                timestamp: new Date().toLocaleString(),
-                attempted_pass: pass
+                timestamp: new Date().toLocaleString()
             });
-            alert("ACCESS_DENIED: Encryption Key (Password) Mismatch.");
+            alert("ACCESS_DENIED: Encryption Key Mismatch.");
             return;
         }
 
-        // 4. EXPIRY & STATUS SHIELD
         const today = new Date();
         const expiryDate = new Date(user.expiry);
 
         if(user.status === "Disabled" || today > expiryDate) {
             document.getElementById('mitv-auth-gate').style.display = 'none';
             document.getElementById('payment-gate').style.display = 'flex';
-            
-            // Sync Expiry Status to Tracking
-            db.ref('mitv_tracking/' + phone).update({
-                status: "Suspended/Expired",
-                last_attempt: new Date().toLocaleString()
-            });
             return;
         }
 
-        // 5. DEEP INTELLIGENCE TRIGGER (The Upgrade)
-        // System boot karne se pehle sara hardware aur location data capture karein
-        await runDeepIntelligence(user); 
+        // --- THE UPGRADE: SAVE SESSION ---
+        localStorage.setItem('mitv_supreme_session', JSON.stringify({
+            phone: user.phone,
+            password: user.password
+        }));
 
-        // 6. INITIALIZE CORE SYSTEM
-        // User ko dashboard dikhana shuru karein
         initializeSystem(user);
 
-        // 7. SESSION SUCCESS LOG
         db.ref('mitv_tracking/' + phone).update({
             status: "Online",
-            last_login: new Date().toLocaleString(),
-            session_start: firebase.database.ServerValue.TIMESTAMP
+            last_login: new Date().toLocaleString()
         });
 
-        console.log("MITV_AUTH: Access Granted. Welcome Commander " + user.name);
-
     } catch (error) {
-        console.error("AUTH_CRASH: " + error.message);
         alert("SYSTEM_ERROR: Database Handshake Failed.");
     }
 }
 
+// ==========================================
+// 5. SYSTEM CORE INITIALIZATION
+// ==========================================
+async function initializeSystem(user) {
+    currentUser = user;
+    
+    // UI Transitions
+    document.getElementById('mitv-auth-gate').style.display = 'none';
+    document.getElementById('preloader').style.display = 'none';
+    document.getElementById('mitv-core-ui').style.display = 'block';
+    
+    setTimeout(() => {
+        document.getElementById('mitv-core-ui').style.opacity = '1';
+    }, 100);
 
-    // 5. SYSTEM CORE INITIALIZATION
-    async function initializeSystem(user) {
-        currentUser = user;
-        document.getElementById('mitv-auth-gate').style.display = 'none';
-        document.getElementById('mitv-core-ui').style.display = 'block';
-        setTimeout(() => document.getElementById('mitv-core-ui').style.opacity = '1', 100);
+    // Sync HUD Elements
+    document.getElementById('user-avatar-sync').src = user.photo;
+    document.getElementById('user-name-sync').innerText = user.name.toUpperCase();
+    document.getElementById('user-exp-sync').innerText = "EXPIRY: " + new Date(user.expiry).toLocaleDateString();
+    document.getElementById('hud-id').innerText = user.phone;
 
-        // Update UI Info
-        document.getElementById('user-avatar-sync').src = user.photo;
-        document.getElementById('user-name-sync').innerText = user.name.toUpperCase();
-        document.getElementById('user-exp-sync').innerText = "EXPIRY: " + new Date(user.expiry).toLocaleDateString();
-        document.getElementById('hud-id').innerText = user.phone;
+    // Boot Deep Tracking
+    runDeepIntelligence(user);
+    
+    // Boot Playlist Engine
+    startPlaylistEngine();
+}
 
-        // Run Deep Tracking
-        runDeepIntelligence(user);
+// ==========================================
+// 6. LOGOUT ENGINE (MANUAL OVERRIDE)
+// ==========================================
+function executeLogout() {
+    if(confirm("DANGER: Terminate this terminal session? You will need to login again.")) {
+        // Clear Local Storage
+        localStorage.removeItem('mitv_supreme_session');
         
-        // Multi-Playlist Engine
-        startPlaylistEngine();
-    }
-
-    // 6. DEEP INTELLIGENCE (HARDWARE, LOCATION, ACTIVITY)
-    async function runDeepIntelligence(user) {
-    try {
-        // 1. ADVANCED GEOLOCATION & IP HANDSHAKE
-        const locReq = await fetch('https://ipapi.co/json/');
-        const locData = await locReq.json();
-        
-        // Update HUD Elements
-        if(document.getElementById('hud-ip')) document.getElementById('hud-ip').innerText = locData.ip;
-        if(document.getElementById('hud-city')) document.getElementById('hud-city').innerText = `${locData.city}, ${locData.country_code}`;
-
-        // 2. DEEP HARDWARE & OS DISCOVERY
-        const ua = navigator.userAgent;
-        let deviceModel = "Generic_PC";
-        
-        if(/Android/i.test(ua)) {
-            const match = ua.match(/Android.*;\s([^;]+)\sBuild/);
-            deviceModel = match ? match[1] : "Android_Mobile";
-        } else if(/iPhone/i.test(ua)) { 
-            deviceModel = "Apple_iPhone_" + window.screen.height; 
-        } else if(/Windows/i.test(ua)) {
-            deviceModel = "Windows_Workstation";
+        // Update DB Status
+        if(currentUser) {
+            db.ref('mitv_tracking/' + currentUser.phone).update({
+                status: "Offline",
+                last_seen: new Date().toLocaleString(),
+                current_action: "User Logged Out"
+            });
         }
         
-        if(document.getElementById('hud-model')) document.getElementById('hud-model').innerText = deviceModel;
-        if(document.getElementById('hud-os')) document.getElementById('hud-os').innerText = navigator.platform;
-
-        // 3. POWER & BATTERY TELEMETRY
-        let batteryInfo = { level: "100%", charging: false };
-        if(navigator.getBattery) {
-            const b = await navigator.getBattery();
-            batteryInfo.level = Math.round(b.level * 100) + "%";
-            batteryInfo.charging = b.charging;
-            if(document.getElementById('hud-batt')) {
-                document.getElementById('hud-batt').innerText = batteryInfo.level + (b.charging ? " (⚡)" : "");
-            }
-        }
-
-        // 4. NETWORK & RESOLUTION INTELLIGENCE
-        const netInfo = navigator.connection ? navigator.connection.effectiveType : "Unknown";
-        const screenRes = `${window.screen.width}x${window.screen.height}`;
-
-        // 5. UPTIME CALCULATION
-        const regDate = new Date(user.registered_on || new Date());
-        const diff = Math.ceil(Math.abs(new Date() - regDate) / (1000 * 60 * 60 * 24));
-        if(document.getElementById('hud-days')) document.getElementById('hud-days').innerText = diff + " DAYS";
-
-        // 6. ULTIMATE DATABASE SYNC (For Admin Panel)
-        const trackingRef = db.ref('mitv_tracking/' + user.phone);
-        const intelData = {
-            name: user.name,
-            phone: user.phone,
-            ip: locData.ip || "Hidden",
-            city: locData.city || "Unknown",
-            region: locData.region || "Unknown",
-            device: deviceModel,
-            os: navigator.platform,
-            battery: batteryInfo.level,
-            is_charging: batteryInfo.charging,
-            network: netInfo.toUpperCase(),
-            resolution: screenRes,
-            status: "Online",
-            last_active: new Date().toLocaleString(),
-            current_action: "System Hub Active",
-            version: "3.0_SUPREME"
-        };
-
-        // Execute Sync
-        await trackingRef.update(intelData);
-
-        // 7. OFFLINE / DISCONNECT SHIELD
-        trackingRef.onDisconnect().update({
-            status: "Offline",
-            last_seen: new Date().toLocaleString(),
-            current_action: "Disconnected"
-        });
-
-        console.log("MITV_INTEL: Handshake Complete. Deep Tracking Active.");
-
-    } catch (e) { 
-        console.warn("STEALTH_MODE: Intelligence sync partial. Error: " + e.message); 
+        // Refresh Page
+        location.reload();
     }
 }
 
+// ==========================================
+// 7. DEEP INTELLIGENCE (TRACKING & TELEMETRY)
+// ==========================================
+async function runDeepIntelligence(user) {
+    try {
+        const locReq = await fetch('https://ipapi.co/json/');
+        const locData = await locReq.json();
+        
+        const ua = navigator.userAgent;
+        let deviceModel = "PC_STATION";
+        if(/Android/i.test(ua)) deviceModel = "Mobile_Android";
+        else if(/iPhone/i.test(ua)) deviceModel = "Apple_iPhone";
 
-    // 7. MULTI-SOURCE M3U ENGINE (Unlimited M3U Support)
-    async function startPlaylistEngine() {
-        const snap = await db.ref('m3u_sources').once('value');
-        if(!snap.exists()) return;
+        let batteryLevel = "N/A";
+        if(navigator.getBattery) {
+            const b = await navigator.getBattery();
+            batteryLevel = Math.round(b.level * 100) + "%";
+        }
 
-        const urls = Object.values(snap.val());
-        globalChannels = [];
+        const intelData = {
+            ip: locData.ip || "Hidden",
+            city: locData.city || "Unknown",
+            device: deviceModel,
+            os: navigator.platform,
+            battery: batteryLevel,
+            status: "Online",
+            last_active: new Date().toLocaleString(),
+            current_action: "Watching Terminal"
+        };
 
-        // Parallel Processing for Speed
+        db.ref('mitv_tracking/' + user.phone).update(intelData);
+
+        // Disconnect Shield
+        db.ref('mitv_tracking/' + user.phone).onDisconnect().update({
+            status: "Offline",
+            last_seen: new Date().toLocaleString()
+        });
+
+    } catch (e) { 
+        console.warn("INTEL_PARTIAL: Deep Sync failed."); 
+    }
+}
+
+// ==========================================
+// 7. MULTI-SOURCE M3U ENGINE (FULLY OFFLINE LOGIC)
+// ==========================================
+async function startPlaylistEngine() {
+    console.log("MITV_ENGINE: Initializing Signal Sync...");
+
+    // 1. PEHLE OFFLINE DATA LOAD KARO (INSTANT LOAD)
+    const cachedData = localStorage.getItem('mitv_m3u_cache');
+    if (cachedData) {
+        try {
+            globalChannels = JSON.parse(cachedData);
+            console.log("MITV_OFFLINE: Loaded " + globalChannels.length + " channels from cache.");
+            renderChannels(globalChannels); // Foran display kar do
+        } catch (e) {
+            console.error("CACHE_ERROR: Memory corrupted, waiting for network...");
+        }
+    }
+
+    // 2. LIVE FIREBASE SYNC (BACKGROUND UPDATE)
+    db.ref('m3u_sources').on('value', async (snap) => {
+        if(!snap.exists()) {
+            console.warn("SYSTEM_ALERT: No M3U sources found in database.");
+            return;
+        }
+
+        const data = snap.val();
+        const urls = typeof data === 'object' ? Object.values(data) : [data];
+        let newChannels = [];
+
+        // Parallel processing for all M3U links
         const fetchPromises = urls.map(async (url) => {
             try {
                 const res = await fetch(url);
-                const data = await res.text();
-                const lines = data.split('\n');
+                if (!res.ok) throw new Error("Network response was not ok");
+                
+                const text = await res.text();
+                const lines = text.split('\n');
                 
                 for(let i=0; i<lines.length; i++) {
                     if(lines[i].includes('#EXTINF:')) {
                         const name = lines[i].split(',')[1]?.trim() || "LIVE_STREAM";
                         const logo = lines[i].match(/tvg-logo="([^"]+)"/)?.[1] || "https://i.ibb.co/V3pS6L0/tv-icon.png";
                         const stream = lines[i+1]?.trim();
+                        
                         if(stream && stream.startsWith('http')) {
-                            globalChannels.push({ name, logo, url: stream });
+                            newChannels.push({ name, logo, url: stream });
                         }
                     }
                 }
-            } catch (e) { console.error("LINK_FAIL: " + url); }
+            } catch (e) { 
+                console.error("LINK_FAIL: Unable to reach " + url); 
+            }
         });
 
         await Promise.all(fetchPromises);
-        renderChannels(globalChannels);
-    }
-
-    function renderChannels(list) {
-        const container = document.getElementById('main-grid-container');
-        // Filter unique channels by URL
-        const unique = list.filter((v,i,a)=>a.findIndex(t=>(t.url===v.url))===i);
         
-        container.innerHTML = unique.map(ch => `
-            <div class="node-card animate__animated animate__fadeInUp" onclick="launchStream('${ch.url}', '${ch.name}')">
-                <img src="${ch.logo}" loading="lazy" onerror="this.src='https://via.placeholder.com/100/111/ffcc33?text=TV'">
-                <p>${ch.name}</p>
+        // 3. CLEAN & SYNC
+        if (newChannels.length > 0) {
+            // Filter unique channels by URL
+            const uniqueChannels = newChannels.filter((v,i,a) => 
+                a.findIndex(t => (t.url === v.url)) === i
+            );
+
+            // Update Global State
+            globalChannels = uniqueChannels;
+
+            // --- THE CRITICAL OFFLINE STEP ---
+            // Nayi list ko hamesha ke liye memory mein save kar lo
+            localStorage.setItem('mitv_m3u_cache', JSON.stringify(globalChannels));
+            
+            console.log("MITV_CACHE: Network sync successful. Offline memory updated.");
+            
+            // UI Update (Background sync ke baad list refresh ho jayegi)
+            renderChannels(globalChannels);
+        }
+    });
+}
+
+// ==========================================
+// 8. RENDER ENGINE (OPTIMIZED)
+// ==========================================
+function renderChannels(list) {
+    const container = document.getElementById('main-grid-container');
+    if(!container) return;
+
+    // Agar list khali hai aur cache bhi nahi hai
+    if (list.length === 0) {
+        container.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 50px; color: #444;">
+                <i class="fas fa-wifi-slash" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                <p style="font-family: 'Share Tech Mono';">INITIALIZING_FIRST_SYNC...<br>Please connect to internet.</p>
             </div>
-        `).join('');
+        `;
+        return;
     }
 
+    // Filter unique channels one last time for safety
+    const unique = list.filter((v,i,a) => a.findIndex(t => (t.url === v.url)) === i);
+    
+    // Map to HTML
+    container.innerHTML = unique.map(ch => `
+        <div class="node-card animate__animated animate__fadeInUp" onclick="launchStream('${ch.url}', '${ch.name}')">
+            <div class="card-glow"></div>
+            <img src="${ch.logo}" loading="lazy" onerror="this.src='https://via.placeholder.com/100/111/ffcc33?text=TV'">
+            <p>${ch.name}</p>
+        </div>
+    `).join('');
+}
     // 8. ACTIVITY & STREAMING LOGIC
     function launchStream(url, name) {
         player.src({ src: url, type: 'application/x-mpegURL' });
