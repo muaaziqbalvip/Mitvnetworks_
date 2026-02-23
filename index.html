@@ -6,7 +6,6 @@
     <title>MITV NETWORK RS.100 BUNDLE</title>
 
     <link href="https://vjs.zencdn.net/7.20.3/video-js.css" rel="stylesheet" />
-    <link href="https://unpkg.com/@videojs/themes@1.0.1/dist/city/index.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
@@ -580,6 +579,106 @@ header { height: 70px; display: flex; justify-content: space-between; align-item
     from { opacity: 0; transform: scale(0.8); }
     to { opacity: 1; transform: scale(1); }
 }
+/* --- MITV DIGITAL FLOATING CONTROLS --- */
+.video-js {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+}
+
+/* Control Bar as an Animated Plate */
+.video-js .vjs-control-bar {
+    display: flex !important;
+    background: rgba(0, 0, 0, 0.7) !important;
+    backdrop-filter: blur(15px);
+    height: 60px !important;
+    width: 95% !important;
+    margin: 0 auto 15px auto !important;
+    border-radius: 15px !important;
+    border: 1px solid rgba(255, 204, 51, 0.3) !important;
+    bottom: -80px !important; /* Shuru mein neeche chupa hoga */
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+    opacity: 0;
+}
+
+/* Hover par Patti upar ayegi */
+.video-js:hover .vjs-control-bar, 
+.video-js.vjs-user-active .vjs-control-bar {
+    bottom: 10px !important;
+    opacity: 1;
+}
+
+/* Gold Glowing Buttons */
+.video-js .vjs-button > .vjs-icon-placeholder:before {
+    color: var(--gold) !important;
+    line-height: 60px !important;
+    text-shadow: 0 0 10px var(--gold-glow);
+    font-size: 1.5em !important;
+}
+
+/* Quality & PiP Icons Specific Style */
+.vjs-picture-in-picture-control, .vjs-quality-selector {
+    display: block !important;
+}
+
+/* Progress Bar (Thin & Clean) */
+.video-js .vjs-progress-control {
+    position: absolute !important;
+    width: 100% !important;
+    top: -5px !important;
+    height: 5px !important;
+}
+
+.video-js .vjs-play-progress {
+    background: linear-gradient(90deg, var(--gold), #fff) !important;
+    box-shadow: 0 0 10px var(--gold);
+}
+
+/* Big Play Button (Cyber Circle) */
+.video-js .vjs-big-play-button {
+    background: rgba(0,0,0,0.5) !important;
+    border: 2px solid var(--gold) !important;
+    width: 80px !important;
+    height: 80px !important;
+    border-radius: 50% !important;
+    line-height: 76px !important;
+}
+/* --- DIGITAL FLOATING PATTI --- */
+.video-js .vjs-control-bar {
+    display: flex !important;
+    background: rgba(0, 0, 0, 0.8) !important;
+    backdrop-filter: blur(15px);
+    height: 55px !important;
+    width: 92% !important;
+    margin: 0 auto 10px auto !important;
+    border-radius: 50px !important; /* Oval Digital Look */
+    border: 1px solid rgba(255, 204, 51, 0.4) !important;
+    bottom: -70px !important;
+    transition: all 0.4s ease !important;
+    opacity: 0;
+}
+
+.video-js:hover .vjs-control-bar, .video-js.vjs-user-active .vjs-control-bar {
+    bottom: 15px !important;
+    opacity: 1;
+}
+
+/* ExoPlayer Button Style */
+.exo-launcher-btn {
+    background: linear-gradient(90deg, #ffcc33, #ffa500);
+    color: #000;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 11px;
+    cursor: pointer;
+    margin: 10px auto;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    box-shadow: 0 0 15px rgba(255, 204, 51, 0.4);
+}
 
     </style>
 </head>
@@ -759,14 +858,6 @@ const db = firebase.database();
 // Global State Management
 let currentUser = null;
 let globalChannels = [];
-const player = videojs('mi-supreme-player', { 
-    fluid: true,
-    autoplay: false,
-    controls: true,
-    responsive: true,
-    controlBar: { skipButtons: { forward: 10, backward: 10 } }
-});
-
 // ==========================================
 // 1. AUTO-LOGIN SYSTEM (PERSISTENT MEMORY)
 // ==========================================
@@ -1154,33 +1245,65 @@ function renderChannels(list) {
 // ==========================================
 // 9. ACTIVITY & STREAMING LOGIC
 // ==========================================
-function launchStream(url, name) {
-    // 1. Player mein stream load karein
-    if(typeof player !== 'undefined') {
-        player.src({ src: url, type: 'application/x-mpegURL' });
-        player.play();
-    } else {
-        // Agar standard video tag use ho raha hai
-        const video = document.querySelector('video');
-        if(video) {
-            video.src = url;
-            video.play();
-        }
+
+// Universal MITV Engine V7.0
+const player = videojs('mi-supreme-player', {
+    fluid: true,
+    controls: true,
+    preload: 'auto',
+    controlBar: {
+        children: [
+            'playToggle',
+            'volumePanel',
+            'currentTimeDisplay',
+            'progressControl',
+            'remainingTimeDisplay',
+            'pictureInPictureToggle',
+            'fullscreenToggle',
+        ]
     }
+});
 
-    // 2. UI Feedback (Neeche scroll nahi hoga)
-    console.log("🎥 NOW_PLAYING: " + name);
+// --- ERROR HANDLING (AUTO BACKUP LOOP) ---
+player.on('error', function() {
+    console.warn("⚠️ MITV_ALERT: Stream Offline. Switching to Backup...");
+    
+    // Error ko clear karke backup file chalana
+    setTimeout(() => {
+        player.src({ src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4', type: 'video/mp4' });
+        player.loop(true); // Loop enable karein
+        player.play();
+        
+        // User ko notification (Optional)
+        console.log("🚀 MITV_CORE: Backup 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4' active in Loop mode.");
+    }, 1000);
+});
 
-    // 3. Admin Tracking (User kya dekh raha hai)
-    if(currentUser && currentUser.phone) {
+// --- UNIVERSAL LAUNCHER ---
+function launchStream(url, name) {
+    if(!url) return;
+
+    // Type detection
+    let type = 'application/x-mpegURL';
+    if(url.endsWith('.mp4')) type = 'video/mp4';
+
+    player.src({ src: url, type: type });
+    player.loop(false); // Channel ke liye loop band
+    
+    player.play().catch(() => {
+        // Agar browser auto-play block kare
+        console.log("Interaction required to start stream.");
+    });
+
+    // Tracking
+    if(currentUser) {
         db.ref('mitv_tracking/' + currentUser.phone).update({
             current_action: "Watching: " + name,
-            last_channel_name: name,
-            last_online: firebase.database.ServerValue.TIMESTAMP
+            last_active: firebase.database.ServerValue.TIMESTAMP
         });
     }
 }
-
+ab
     // 9. SEARCH & FILTER LOGIC
     function handleSearch() {
         const query = document.getElementById('global-search').value.toLowerCase();
